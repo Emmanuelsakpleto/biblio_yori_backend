@@ -1,0 +1,678 @@
+###
+# 🔥 YORI Backend API - TESTS COMPLETS
+# Extension REST Client pour VS Code
+#
+# 🔑 INFOS DE CONNEXION:
+# Utilisateurs avec mot de passe: Password123!
+# - admin@yori.com (admin)
+# - jean.dupont@student.univ.com (student) 
+# - marie.martin@student.univ.com (student)
+# - pierre.durand@student.univ.com (student)
+# - sophie.biblio@yori.com (librarian)
+###
+
+@baseUrl = http://localhost:5000/api
+@adminEmail = admin@yori.com
+@studentEmail = jean.dupont@student.univ.com
+@librarianEmail = sophie.biblio@yori.com
+@password = Password123!
+
+# Variables dynamiques (à remplir après login)
+@adminToken = 
+@studentToken = 
+@librarianToken = 
+
+###
+# ====================================
+# 🔐 AUTHENTIFICATION
+# ====================================
+
+### 1. Connexion Admin
+# @name loginAdmin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{password}}"
+}
+
+### 2. Connexion Étudiant
+# @name loginStudent  
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{studentEmail}}",
+  "password": "{{password}}"
+}
+
+### 3. Connexion Bibliothécaire
+# @name loginLibrarian
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{librarianEmail}}",
+  "password": "{{password}}"
+}
+
+### 4. Inscription nouveau utilisateur
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "nouveau@test.com",
+  "password": "Password123!",
+  "first_name": "Nouveau",
+  "last_name": "Utilisateur",
+  "phone": "+33123456999",
+  "department": "Test"
+}
+
+### 5. Profil utilisateur
+GET {{baseUrl}}/auth/profile
+Authorization: Bearer {{studentToken}}
+
+### 6. Mise à jour profil
+PUT {{baseUrl}}/auth/profile
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "first_name": "Jean-Pierre",
+  "phone": "+33123456888",
+  "department": "Informatique"
+}
+
+### 7. Mot de passe oublié
+POST {{baseUrl}}/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "{{studentEmail}}"
+}
+
+### 8. Déconnexion
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{studentToken}}
+
+###
+# ====================================
+# 📚 GESTION DES LIVRES
+# ====================================
+
+### 9. Liste des livres (public)
+GET {{baseUrl}}/books
+
+### 10. Liste avec pagination
+GET {{baseUrl}}/books?page=1&limit=5
+
+### 11. Détails d'un livre
+GET {{baseUrl}}/books/1
+
+### 12. Recherche de livres
+GET {{baseUrl}}/books/search?q=Python&category=Informatique
+
+### 13. Livres populaires
+GET {{baseUrl}}/books/popular
+
+### 14. Nouveaux livres
+GET {{baseUrl}}/books/new
+
+### 15. Catégories disponibles
+GET {{baseUrl}}/books/categories
+
+### 16. Livres par catégorie
+GET {{baseUrl}}/books/category/Informatique
+
+### 17. Vérifier disponibilité
+GET {{baseUrl}}/books/1/availability
+
+### 18. Créer un livre (Admin)
+POST {{baseUrl}}/books
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "title": "Test Livre Admin",
+  "author": "Auteur Test",
+  "isbn": "978-0123456789",
+  "publisher": "Éditeur Test",
+  "publication_year": 2024,
+  "category": "Test",
+  "description": "Livre de test créé par admin",
+  "total_copies": 3,
+  "available_copies": 3,
+  "language": "fr",
+  "pages": 300,
+  "location": "A1-Test"
+}
+
+### 19. Modifier un livre (Admin)
+PUT {{baseUrl}}/books/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "title": "Titre Modifié par Admin",
+  "description": "Description mise à jour",
+  "total_copies": 5,
+  "available_copies": 4
+}
+
+### 20. Supprimer un livre (Admin)
+DELETE {{baseUrl}}/books/50
+Authorization: Bearer {{adminToken}}
+
+### 21. Réserver un livre
+POST {{baseUrl}}/books/1/reserve
+Authorization: Bearer {{studentToken}}
+
+### 22. Annuler réservation
+DELETE {{baseUrl}}/books/1/reserve
+Authorization: Bearer {{studentToken}}
+
+### 23. Mes réservations
+GET {{baseUrl}}/books/reservations/me
+Authorization: Bearer {{studentToken}}
+
+### 24. Télécharger PDF (si disponible)
+GET {{baseUrl}}/books/1/download
+Authorization: Bearer {{studentToken}}
+
+###
+# ====================================
+# 📖 GESTION DES EMPRUNTS
+# ====================================
+
+### 25. Créer un emprunt
+POST {{baseUrl}}/loans
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "book_id": 2,
+  "duration_days": 14
+}
+
+### 26. Mes emprunts
+GET {{baseUrl}}/loans/me
+Authorization: Bearer {{studentToken}}
+
+### 27. Résumé de mes emprunts
+GET {{baseUrl}}/loans/me/summary
+Authorization: Bearer {{studentToken}}
+
+### 28. Mes réservations d'emprunts
+GET {{baseUrl}}/loans/me/reservations
+Authorization: Bearer {{studentToken}}
+
+### 29. Réserver un créneau d'emprunt
+POST {{baseUrl}}/loans/reserve
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "book_id": 3,
+  "requested_date": "2024-01-15"
+}
+
+### 30. Vérifier éligibilité emprunt
+GET {{baseUrl}}/loans/book/1/eligibility
+Authorization: Bearer {{studentToken}}
+
+### 31. Historique emprunts d'un livre
+GET {{baseUrl}}/loans/book/1/history
+Authorization: Bearer {{studentToken}}
+
+### 32. Rechercher emprunts
+GET {{baseUrl}}/loans/search?status=active
+Authorization: Bearer {{studentToken}}
+
+### 33. Emprunts populaires
+GET {{baseUrl}}/loans/popular
+Authorization: Bearer {{studentToken}}
+
+### 34. Détails d'un emprunt
+GET {{baseUrl}}/loans/1
+Authorization: Bearer {{studentToken}}
+
+### 35. Retourner un livre
+PATCH {{baseUrl}}/loans/1/return
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "return_condition": "good"
+}
+
+### 36. Calculer pénalité
+GET {{baseUrl}}/loans/1/penalty
+Authorization: Bearer {{studentToken}}
+
+### 37. Tous les emprunts (Admin)
+GET {{baseUrl}}/loans
+Authorization: Bearer {{adminToken}}
+
+### 38. Renouveler emprunt (Admin)
+PATCH {{baseUrl}}/loans/1/renew
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "extension_days": 7
+}
+
+### 39. Emprunts en retard (Admin)
+GET {{baseUrl}}/loans/overdue/list
+Authorization: Bearer {{adminToken}}
+
+### 40. Statistiques emprunts (Admin)
+GET {{baseUrl}}/loans/stats/summary
+Authorization: Bearer {{adminToken}}
+
+### 41. Marquer en retard (Admin)
+PATCH {{baseUrl}}/loans/1/overdue
+Authorization: Bearer {{adminToken}}
+
+### 42. Appliquer pénalité (Admin)
+PATCH {{baseUrl}}/loans/1/penalty
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "penalty_amount": 5.00,
+  "reason": "Retard de 3 jours"
+}
+
+### 43. Envoyer rappels (Admin)
+POST {{baseUrl}}/loans/reminders/send
+Authorization: Bearer {{adminToken}}
+
+###
+# ====================================
+# ⭐ GESTION DES AVIS
+# ====================================
+
+### 44. Avis récents (public)
+GET {{baseUrl}}/reviews/recent
+
+### 45. Meilleurs avis (public)
+GET {{baseUrl}}/reviews/top
+
+### 46. Avis d'un livre (public)
+GET {{baseUrl}}/reviews/book/1
+
+### 47. Stats avis d'un livre (public)
+GET {{baseUrl}}/reviews/book/1/stats
+
+### 48. Rechercher avis (public)
+GET {{baseUrl}}/reviews/search?rating=5
+
+### 49. Créer un avis
+POST {{baseUrl}}/reviews
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "book_id": 1,
+  "rating": 5,
+  "comment": "Excellent livre ! Je le recommande vivement.",
+  "title": "Très bon livre"
+}
+
+### 50. Mes avis
+GET {{baseUrl}}/reviews/me
+Authorization: Bearer {{studentToken}}
+
+### 51. Vérifier éligibilité avis
+GET {{baseUrl}}/reviews/book/1/eligibility
+Authorization: Bearer {{studentToken}}
+
+### 52. Détails d'un avis
+GET {{baseUrl}}/reviews/1
+Authorization: Bearer {{studentToken}}
+
+### 53. Modifier mon avis
+PUT {{baseUrl}}/reviews/1
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "rating": 4,
+  "comment": "Bon livre, mais quelques passages difficiles",
+  "title": "Livre correct"
+}
+
+### 54. Supprimer mon avis
+DELETE {{baseUrl}}/reviews/1
+Authorization: Bearer {{studentToken}}
+
+### 55. Marquer avis utile
+POST {{baseUrl}}/reviews/2/helpful
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "helpful": true
+}
+
+### 56. Signaler un avis
+POST {{baseUrl}}/reviews/2/report
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "reason": "spam",
+  "comment": "Contenu inapproprié"
+}
+
+###
+# ====================================
+# 🔔 GESTION DES NOTIFICATIONS
+# ====================================
+
+### 57. Mes notifications
+GET {{baseUrl}}/notifications/me
+Authorization: Bearer {{studentToken}}
+
+### 58. Nombre non lues
+GET {{baseUrl}}/notifications/me/unread-count
+Authorization: Bearer {{studentToken}}
+
+### 59. Notifications temps réel
+GET {{baseUrl}}/notifications/me/realtime
+Authorization: Bearer {{studentToken}}
+
+### 60. Paramètres notifications
+GET {{baseUrl}}/notifications/me/settings
+Authorization: Bearer {{studentToken}}
+
+### 61. Modifier paramètres
+PUT {{baseUrl}}/notifications/me/settings
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "email_notifications": true,
+  "push_notifications": false,
+  "loan_reminders": true,
+  "new_books": true
+}
+
+### 62. Marquer toutes comme lues
+PATCH {{baseUrl}}/notifications/me/mark-all-read
+Authorization: Bearer {{studentToken}}
+
+### 63. Stream notifications (SSE)
+GET {{baseUrl}}/notifications/stream
+Authorization: Bearer {{studentToken}}
+
+### 64. Créer notification personnalisée
+POST {{baseUrl}}/notifications/custom
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "type": "reminder",
+  "title": "Mon rappel",
+  "message": "N'oubliez pas de retourner le livre"
+}
+
+### 65. Détails notification
+GET {{baseUrl}}/notifications/1
+Authorization: Bearer {{studentToken}}
+
+### 66. Marquer comme lue
+PATCH {{baseUrl}}/notifications/1/read
+Authorization: Bearer {{studentToken}}
+
+### 67. Supprimer notification
+DELETE {{baseUrl}}/notifications/1
+Authorization: Bearer {{studentToken}}
+
+### 68. Toutes les notifications (Admin)
+GET {{baseUrl}}/notifications
+Authorization: Bearer {{adminToken}}
+
+### 69. Notifications par type (Admin)
+GET {{baseUrl}}/notifications/type/loan_reminder
+Authorization: Bearer {{adminToken}}
+
+### 70. Stats notifications (Admin)
+GET {{baseUrl}}/notifications/stats/summary
+Authorization: Bearer {{adminToken}}
+
+### 71. Notification en lot (Admin)
+POST {{baseUrl}}/notifications/bulk
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "user_ids": [2, 3, 4],
+  "type": "announcement",
+  "title": "Maintenance système",
+  "message": "Le système sera en maintenance ce weekend"
+}
+
+### 72. Notification système (Admin)
+POST {{baseUrl}}/notifications/system-wide
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "type": "maintenance",
+  "title": "Maintenance programmée",
+  "message": "Le système sera indisponible demain de 2h à 4h"
+}
+
+###
+# ====================================
+# 👥 ADMINISTRATION UTILISATEURS
+# ====================================
+
+### 73. Dashboard admin
+GET {{baseUrl}}/admin/dashboard
+Authorization: Bearer {{adminToken}}
+
+### 74. Stats système
+GET {{baseUrl}}/admin/stats/system
+Authorization: Bearer {{adminToken}}
+
+### 75. Stats par période
+GET {{baseUrl}}/admin/stats/period?period=month
+Authorization: Bearer {{adminToken}}
+
+### 76. Activités récentes
+GET {{baseUrl}}/admin/activities/recent
+Authorization: Bearer {{adminToken}}
+
+### 77. Rapport mensuel
+GET {{baseUrl}}/admin/reports/monthly
+Authorization: Bearer {{adminToken}}
+
+### 78. Tous les utilisateurs
+GET {{baseUrl}}/admin/users
+Authorization: Bearer {{adminToken}}
+
+### 79. Utilisateurs avec pagination
+GET {{baseUrl}}/admin/users?page=1&limit=10&search=jean
+Authorization: Bearer {{adminToken}}
+
+### 80. Détails utilisateur
+GET {{baseUrl}}/admin/users/2
+Authorization: Bearer {{adminToken}}
+
+### 81. Modifier utilisateur
+PUT {{baseUrl}}/admin/users/2
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "first_name": "Jean-Claude",
+  "is_active": true,
+  "role": "student"
+}
+
+### 82. Changer statut utilisateur
+PATCH {{baseUrl}}/admin/users/2/status
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "is_active": false,
+  "reason": "Suspension temporaire"
+}
+
+### 83. Promouvoir admin
+PATCH {{baseUrl}}/admin/users/2/promote
+Authorization: Bearer {{adminToken}}
+
+### 84. Rétrograder admin
+PATCH {{baseUrl}}/admin/users/3/demote
+Authorization: Bearer {{adminToken}}
+
+### 85. Supprimer utilisateur
+DELETE {{baseUrl}}/admin/users/5
+Authorization: Bearer {{adminToken}}
+
+###
+# ====================================
+# 📊 ADMINISTRATION LIVRES & EMPRUNTS
+# ====================================
+
+### 86. Mise à jour livres en lot
+PATCH {{baseUrl}}/admin/books/bulk-update
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "book_ids": [1, 2, 3],
+  "updates": {
+    "location": "A1-Nouveau"
+  }
+}
+
+### 87. Suppression livres en lot
+DELETE {{baseUrl}}/admin/books/bulk-delete
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "book_ids": [10, 11, 12]
+}
+
+### 88. Mise à jour emprunts en lot
+PATCH {{baseUrl}}/admin/loans/bulk-update
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "loan_ids": [1, 2, 3],
+  "updates": {
+    "status": "returned"
+  }
+}
+
+### 89. Réservations en attente
+GET {{baseUrl}}/admin/reservations/pending
+Authorization: Bearer {{adminToken}}
+
+### 90. Traiter réservation
+PATCH {{baseUrl}}/admin/reservations/1/process
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "action": "approve",
+  "loan_duration": 14
+}
+
+### 91. Notifications en lot
+POST {{baseUrl}}/admin/notifications/bulk-send
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "recipient_type": "role",
+  "recipients": ["student"],
+  "type": "announcement",
+  "title": "Nouvelle politique",
+  "message": "Nouvelles règles d'emprunt en vigueur"
+}
+
+###
+# ====================================
+# ⚙️ ADMINISTRATION SYSTÈME
+# ====================================
+
+### 92. Paramètres système
+GET {{baseUrl}}/admin/settings
+Authorization: Bearer {{adminToken}}
+
+### 93. Modifier paramètres
+PUT {{baseUrl}}/admin/settings
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "max_loans_per_user": 5,
+  "loan_duration_days": 14,
+  "late_fee_per_day": 1.50
+}
+
+### 94. Export données
+GET {{baseUrl}}/admin/export/data?type=loans&format=csv
+Authorization: Bearer {{adminToken}}
+
+### 95. Créer sauvegarde
+POST {{baseUrl}}/admin/backup/create
+Authorization: Bearer {{adminToken}}
+
+### 96. Nettoyage données
+POST {{baseUrl}}/admin/maintenance/cleanup
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "older_than_days": 365,
+  "include_logs": true
+}
+
+### 97. Maintenance système
+POST {{baseUrl}}/admin/maintenance/perform
+Authorization: Bearer {{adminToken}}
+
+### 98. Logs système
+GET {{baseUrl}}/admin/logs?level=error&limit=50
+Authorization: Bearer {{adminToken}}
+
+###
+# ====================================
+# 🧪 TESTS & MONITORING
+# ====================================
+
+### 99. Test API
+GET {{baseUrl}}/test
+
+### 100. Documentation API
+GET {{baseUrl}}/docs
+
+###
+# ====================================
+# 📋 INSTRUCTIONS
+# ====================================
+
+###
+# UTILISATION :
+# 1. Installez REST Client dans VS Code
+# 2. Démarrez votre backend
+# 3. Exécutez les connexions (1, 2, 3)
+# 4. Copiez les tokens dans les variables
+# 5. Testez les autres endpoints
+#
+# RACCOURCIS :
+# - Ctrl+Alt+R : Exécuter requête
+# - Ctrl+Alt+E : Exécuter tout
+###

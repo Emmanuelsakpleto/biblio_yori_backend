@@ -1,0 +1,463 @@
+###
+# YORI Backend API Tests
+# Utilisez l'extension REST Client de VS Code pour exécuter ces requêtes
+#
+# 🔑 INFORMATIONS DE CONNEXION:
+# Tous les utilisateurs ont le mot de passe: Password123!
+# 
+# Utilisateurs disponibles:
+# - admin@yori.com (admin)
+# - jean.dupont@student.univ.com (student) 
+# - marie.martin@student.univ.com (student)
+# - pierre.durand@student.univ.com (student)
+# - sophie.biblio@yori.com (librarian)
+# - test@example.com (student)
+###
+
+@baseUrl = http://localhost:5000/api
+@adminEmail = admin@yori.com
+# @studentEmail = jean.dupont@student.univ.com
+@studentEmail = pierre.durand@student.univ.com
+@testEmail = test@example.com
+@password = Password123!
+
+# Variables dynamiques (à remplir après login)
+@adminToken =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJhZG1pbkBsZWN0dXJhLmNvbSIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTc1MTMyNTEyNywiZXhwIjoxNzUxOTI5OTI3fQ.3G65xIJMZ97Cw44dErwJqh79wq7dgFbeviqQ-dXBquE
+@studentToken =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6NywiZW1haWwiOiJwaWVycmUuZHVyYW5kQHN0dWRlbnQudW5pdi5jb20iLCJyb2xlIjoic3R1ZGVudCIsImlhdCI6MTc1MTMyNTUyNSwiZXhwIjoxNzUxOTMwMzI1fQ.NGfxCSi4l01-7VgZ_gzjlwnKxEnUgGrDup6LJGNSAf8
+@testToken =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiZW1haWwiOiJ0ZXN0QGV4YW1wbGUuY29tIiwicm9sZSI6InN0dWRlbnQiLCJpYXQiOjE3NTEzMjUyNjAsImV4cCI6MTc1MTkzMDA2MH0.7pujvaRSsbIJwj3-7FT-i9OnRZu64H-gj0OarX0RU0U
+@refreshToken =eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6OCwiaWF0IjoxNzUxMzI1MzMyLCJleHAiOjE3NTM5MTczMzJ9.sUpPpnGOKtyNpUALb_ocQvPRDIEM2o-0MI2A-v6yj3A
+
+###
+# ====================================
+# 🔐 AUTHENTIFICATION
+# ====================================
+
+### 1. Inscription d'un nouvel utilisateur
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "nouveau@test.com",
+  "password": "Password123!",
+  "first_name": "Nouveau",
+  "last_name": "Utilisateur",
+  "phone": "+33123456999",
+  "department": "Test"
+}
+
+### 2. Connexion Admin
+# @name loginAdmin
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{adminEmail}}",
+  "password": "{{password}}"
+}
+
+### 3. Connexion Étudiant
+# @name loginStudent
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{studentEmail}}",
+  "password": "{{password}}"
+}
+
+### 4. Connexion Utilisateur Test
+# @name loginTest
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "{{testEmail}}",
+  "password": "{{password}}"
+}
+
+### 5. Rafraîchir le token
+POST {{baseUrl}}/auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{refreshToken}}"
+}
+
+### 6. Déconnexion
+POST {{baseUrl}}/auth/logout
+Authorization: Bearer {{studentToken}}
+
+###
+# ====================================
+# 📚 GESTION DES LIVRES
+# ====================================
+
+### 7. Obtenir tous les livres (public)
+GET {{baseUrl}}/books
+
+### 8. Obtenir tous les livres avec pagination
+GET {{baseUrl}}/books?page=1&limit=10
+
+### 9. Obtenir un livre spécifique
+GET {{baseUrl}}/books/1
+
+### 10. Rechercher des livres
+GET {{baseUrl}}/books/search?q=Algorithme
+
+### 11. Rechercher par catégorie
+GET {{baseUrl}}/books/search?category=Informatique
+
+### 12. Créer un nouveau livre (Admin seulement)
+POST {{baseUrl}}/books
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "title": "Nouveau Livre de Test",
+  "author": "Auteur Test",
+  "isbn": "978-0123456789",
+  "publisher": "Éditeur Test",
+  "publication_year": 2024,
+  "category": "Test",
+  "description": "Description du livre de test",
+  "total_copies": 2,
+  "available_copies": 2,
+  "language": "fr",
+  "pages": 300,
+  "location": "Section Test"
+}
+
+### 12b. Créer avec ISBN-10 (Alternative)
+POST {{baseUrl}}/books
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "title": "Livre Test ISBN-10",
+  "author": "Auteur Test 2",
+  "isbn": "0123456789",
+  "publisher": "Éditeur Test",
+  "publication_year": 2024,
+  "category": "Test",
+  "description": "Test avec ISBN-10",
+  "total_copies": 1,
+  "available_copies": 1,
+  "language": "fr",
+  "pages": 250,
+  "location": "Section Test"
+}
+
+### 12c. Créer avec ISBN avec tirets (Alternative)
+POST {{baseUrl}}/books
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "title": "Livre Test ISBN avec tirets",
+  "author": "Auteur Test 3",
+  "isbn": "978-0-12-345678-9",
+  "publisher": "Éditeur Test",
+  "publication_year": 2024,
+  "category": "Test",
+  "description": "Test avec ISBN-13 formaté",
+  "total_copies": 1,
+  "available_copies": 1,
+  "language": "fr",
+  "pages": 200,
+  "location": "Section Test"
+}
+
+### 13. Modifier un livre (Admin seulement)
+PUT {{baseUrl}}/books/1
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "title": "Titre Modifié",
+  "description": "Description modifiée",
+  "total_copies": 3,
+  "available_copies": 2
+}
+
+### 14. Supprimer un livre (Admin seulement)
+DELETE {{baseUrl}}/books/6
+Authorization: Bearer {{adminToken}}
+
+###
+# ====================================
+# 📖 GESTION DES EMPRUNTS
+# ====================================
+
+### 15. Créer un emprunt
+POST {{baseUrl}}/loans
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "book_id": 1,
+  "duration_days": 14
+}
+
+### 16. Obtenir mes emprunts
+GET {{baseUrl}}/loans/me
+Authorization: Bearer {{studentToken}}
+
+# ### 16b. Debug - Voir les IDs exacts des emprunts de l'utilisateur
+# GET {{baseUrl}}/loans/me
+# Authorization: Bearer {{studentToken}}
+
+### 17. Retourner un livre (ID 7 - emprunt actif de l'utilisateur)
+PATCH {{baseUrl}}/loans/6/return
+Authorization: Bearer {{studentToken}}
+
+### 18. Prolonger un emprunt (Admin seulement)
+PUT {{baseUrl}}/loans/6/extend
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "extension_days": 14
+}
+
+### 19. Obtenir tous les emprunts (Admin seulement)
+GET {{baseUrl}}/loans
+Authorization: Bearer {{adminToken}}
+
+### 20. Obtenir les emprunts en retard (Admin)
+GET {{baseUrl}}/loans?status=overdue
+Authorization: Bearer {{adminToken}}
+
+###
+# ====================================
+# ⭐ GESTION DES AVIS
+# ====================================
+
+### 21. Créer un avis sur un livre
+POST {{baseUrl}}/reviews
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "book_id": 1,
+  "rating": 5,
+  "comment": "Excellent livre sur les algorithmes ! Très complet et bien expliqué."
+}
+
+### 22. Obtenir les avis d'un livre
+GET {{baseUrl}}/reviews/book/1
+
+### 23. Modifier mon avis
+PUT {{baseUrl}}/reviews/1
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "rating": 4,
+  "comment": "Bon livre, mais certains passages sont complexes."
+}
+
+### 24. Supprimer mon avis
+DELETE {{baseUrl}}/reviews/1
+Authorization: Bearer {{studentToken}}
+
+### 25. Approuver un avis (Admin)
+PATCH {{baseUrl}}/reviews/3/moderate
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "action": "approve",
+  "reason": "Avis conforme aux règles"
+}
+
+###
+# ====================================
+# 🔔 GESTION DES NOTIFICATIONS
+# ====================================
+
+### 26. Obtenir mes notifications
+GET {{baseUrl}}/notifications/me
+Authorization: Bearer {{studentToken}}
+
+### 27. Marquer une notification comme lue
+PUT {{baseUrl}}/notifications/1/read
+Authorization: Bearer {{studentToken}}
+
+### 28. Marquer toutes les notifications comme lues
+PUT {{baseUrl}}/notifications/mark-all-read
+Authorization: Bearer {{studentToken}}
+
+### 29. Supprimer une notification
+DELETE {{baseUrl}}/notifications/1
+Authorization: Bearer {{studentToken}}
+
+### 30. Créer une notification (Admin)
+POST {{baseUrl}}/notifications
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "user_id": 2,
+  "type": "loan_reminder",
+  "title": "Rappel d'emprunt",
+  "message": "N'oubliez pas de retourner votre livre avant la date d'échéance."
+}
+
+###
+# ====================================
+# 👥 GESTION DES UTILISATEURS (Admin)
+# ====================================
+
+### 31. Obtenir tous les utilisateurs
+GET {{baseUrl}}/admin/users
+Authorization: Bearer {{adminToken}}
+
+### 32. Obtenir un utilisateur spécifique
+GET {{baseUrl}}/admin/users/1
+Authorization: Bearer {{adminToken}}
+
+### 33. Modifier un utilisateur
+PUT {{baseUrl}}/admin/users/2
+Authorization: Bearer {{adminToken}}
+Content-Type: application/json
+
+{
+  "first_name": "Jean-Pierre",
+  "is_active": true,
+  "role": "student"
+}
+
+### 34. Désactiver un utilisateur
+PUT {{baseUrl}}/admin/users/2/deactivate
+Authorization: Bearer {{adminToken}}
+
+### 35. Réactiver un utilisateur
+PUT {{baseUrl}}/admin/users/2/activate
+Authorization: Bearer {{adminToken}}
+
+### 36. Supprimer un utilisateur
+DELETE {{baseUrl}}/admin/users/6
+Authorization: Bearer {{adminToken}}
+
+### 37. Obtenir les statistiques des utilisateurs
+GET {{baseUrl}}/admin/stats/users
+Authorization: Bearer {{adminToken}}
+
+### 38. Obtenir les statistiques des livres
+GET {{baseUrl}}/admin/stats/books
+Authorization: Bearer {{adminToken}}
+
+### 39. Obtenir les statistiques des emprunts
+GET {{baseUrl}}/admin/stats/loans
+Authorization: Bearer {{adminToken}}
+
+###
+# ====================================
+# 🏥 SANTÉ ET MONITORING
+# ====================================
+
+### 40. Vérifier la santé du serveur
+GET {{baseUrl}}/health
+
+### 41. Obtenir les métriques (si disponible)
+GET {{baseUrl}}/metrics
+
+### 42. Test de route inexistante (404)
+GET {{baseUrl}}/route-inexistante
+
+###
+# ====================================
+# 📁 UPLOAD DE FICHIERS
+# ====================================
+
+### 43. Upload d'image de profil
+POST {{baseUrl}}/upload/profile
+Authorization: Bearer {{studentToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="profile"; filename="profile.jpg"
+Content-Type: image/jpeg
+
+< ./uploads/test-profile.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+### 44. Upload de couverture de livre (Admin)
+POST {{baseUrl}}/upload/book-cover
+Authorization: Bearer {{adminToken}}
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="cover"; filename="book-cover.jpg"
+Content-Type: image/jpeg
+
+< ./uploads/test-book-cover.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+###
+# ====================================
+# 🧪 TESTS D'ERREURS
+# ====================================
+
+### 45. Test avec token invalide
+GET {{baseUrl}}/loans/me
+Authorization: Bearer invalid-token
+
+### 46. Test sans autorisation
+POST {{baseUrl}}/books
+Content-Type: application/json
+
+{
+  "title": "Livre sans autorisation"
+}
+
+### 47. Test avec données invalides
+POST {{baseUrl}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "email-invalide",
+  "password": "123"
+}
+
+### 48. Test de création d'emprunt avec livre inexistant
+POST {{baseUrl}}/loans
+Authorization: Bearer {{studentToken}}
+Content-Type: application/json
+
+{
+  "book_id": 999,
+  "due_date": "2025-07-15"
+}
+
+### 49. Test de modification d'un emprunt inexistant
+PUT {{baseUrl}}/loans/999/return
+Authorization: Bearer {{studentToken}}
+
+### 50. Test de suppression d'utilisateur inexistant
+DELETE {{baseUrl}}/admin/users/999
+Authorization: Bearer {{adminToken}}
+
+###
+# ====================================
+# 📊 INSTRUCTIONS D'UTILISATION
+# ====================================
+
+###
+# COMMENT UTILISER CE FICHIER :
+#
+# 1. Installez l'extension "REST Client" dans VS Code
+# 2. Démarrez votre serveur backend : npm run dev
+# 3. Exécutez d'abord les requêtes de connexion (2, 3, 4)
+# 4. Copiez les tokens retournés dans les variables en haut du fichier
+# 5. Utilisez les autres requêtes pour tester votre API
+#
+# RACCOURCIS :
+# - Ctrl+Alt+R : Exécuter la requête sous le curseur
+# - Ctrl+Alt+E : Exécuter toutes les requêtes dans le fichier
+#
+# NOTES :
+# - Remplacez {{adminToken}}, {{studentToken}}, etc. par les vrais tokens
+# - Adaptez les IDs selon votre base de données
+# - Certaines requêtes nécessitent que d'autres soient exécutées avant
+###
