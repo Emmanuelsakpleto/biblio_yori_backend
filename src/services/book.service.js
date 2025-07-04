@@ -244,8 +244,8 @@ class BookService {
           COUNT(DISTINCT r.id) as review_count
         FROM books b
         LEFT JOIN loans l ON b.id = l.book_id AND l.created_at >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-        LEFT JOIN reviews r ON b.id = r.book_id AND r.is_active = 1
-        WHERE b.is_active = 1 AND b.status = ?
+        LEFT JOIN reviews r ON b.id = r.book_id
+        WHERE b.status != 'deleted' AND b.status = ?
         GROUP BY b.id
         ORDER BY loan_count DESC, average_rating DESC
         LIMIT ?
@@ -272,8 +272,8 @@ class BookService {
           COALESCE(AVG(r.rating), 0) as average_rating,
           COUNT(DISTINCT r.id) as review_count
         FROM books b
-        LEFT JOIN reviews r ON b.id = r.book_id AND r.is_active = 1
-        WHERE b.is_active = 1 AND b.status = ?
+        LEFT JOIN reviews r ON b.id = r.book_id
+        WHERE b.status != 'deleted' AND b.status = ?
         GROUP BY b.id
         ORDER BY b.created_at DESC
         LIMIT ?
@@ -302,8 +302,8 @@ class BookService {
           COALESCE(AVG(r.rating), 0) as average_rating,
           COUNT(DISTINCT r.id) as review_count
         FROM books b
-        LEFT JOIN reviews r ON b.id = r.book_id AND r.is_active = 1
-        WHERE b.is_active = 1 
+        LEFT JOIN reviews r ON b.id = r.book_id
+        WHERE b.status != 'deleted' 
           AND b.status = ?
           AND b.id NOT IN (
             SELECT DISTINCT l.book_id 
@@ -372,8 +372,8 @@ class BookService {
           COUNT(DISTINCT CASE WHEN r.rating = 1 THEN r.id END) as one_star_reviews
         FROM books b
         LEFT JOIN loans l ON b.id = l.book_id
-        LEFT JOIN reviews r ON b.id = r.book_id AND r.is_active = 1
-        WHERE b.id = ? AND b.is_active = 1
+        LEFT JOIN reviews r ON b.id = r.book_id AND r.status != 'deleted'
+        WHERE b.id = ? AND b.status != 'deleted'
         GROUP BY b.id
       `;
 
@@ -401,7 +401,7 @@ class BookService {
           status,
           (available_quantity > 0) as is_available
         FROM books
-        WHERE id = ? AND is_active = 1
+        WHERE id = ? AND status != 'deleted'
       `;
 
       const [book] = await database.query(sql, [bookId]);
@@ -456,7 +456,7 @@ class BookService {
       const sql = `
         UPDATE books 
         SET available_quantity = LEAST(available_quantity + ?, total_quantity)
-        WHERE id = ? AND is_active = 1
+        WHERE id = ? AND status != 'deleted'
       `;
 
       const result = await database.query(sql, [quantity, bookId]);
@@ -477,9 +477,9 @@ class BookService {
         SELECT 
           category,
           COUNT(*) as book_count,
-          SUM(available_quantity) as available_books
+          SUM(available_copies) as available_books
         FROM books
-        WHERE is_active = 1 AND status = ?
+        WHERE status != 'deleted' AND status = ?
         GROUP BY category
         ORDER BY book_count DESC
       `;
@@ -505,10 +505,10 @@ class BookService {
           COUNT(*) as book_count,
           SUM(available_quantity) as available_books,
           COALESCE(AVG(
-            (SELECT AVG(rating) FROM reviews r WHERE r.book_id = b.id AND r.is_active = 1)
+            (SELECT AVG(rating) FROM reviews r WHERE r.book_id = b.id AND r.status != 'deleted')
           ), 0) as average_rating
         FROM books b
-        WHERE is_active = 1 AND status = ?
+        WHERE status != 'deleted' AND status = ?
         GROUP BY author
         ORDER BY book_count DESC
         LIMIT ?
@@ -537,8 +537,8 @@ class BookService {
           COUNT(DISTINCT r.id) as review_count,
           MATCH(title, description) AGAINST(? IN NATURAL LANGUAGE MODE) as relevance
         FROM books b
-        LEFT JOIN reviews r ON b.id = r.book_id AND r.is_active = 1
-        WHERE b.is_active = 1 
+        LEFT JOIN reviews r ON b.id = r.book_id AND r.status != 'deleted'
+        WHERE b.status != 'deleted' 
           AND b.status = ?
           AND (
             MATCH(title, description) AGAINST(? IN NATURAL LANGUAGE MODE) > 0
@@ -576,7 +576,7 @@ class BookService {
           ),
           average_rating = (
             SELECT COALESCE(AVG(rating), 0) FROM reviews 
-            WHERE book_id = ? AND is_active = 1
+            WHERE book_id = ? AND status != 'deleted'
           ),
           updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
@@ -640,7 +640,7 @@ class BookService {
           COUNT(DISTINCT author) as total_authors,
           COALESCE(AVG(average_rating), 0) as global_average_rating
         FROM books
-        WHERE is_active = 1
+        WHERE status != 'deleted'
       `;
 
       const [stats] = await database.query(sql);

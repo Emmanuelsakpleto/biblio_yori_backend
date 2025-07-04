@@ -1,5 +1,6 @@
 const BookService = require('../services/book.service');
 const { AppError, formatResponse, paginate } = require('../utils/helpers');
+const { transformBookWithUrls, transformBooksWithUrls } = require('../utils/file-url.utils');
 const path = require('path');
 const fs = require('fs').promises;
 
@@ -30,6 +31,11 @@ class BookController {
       const pagination = paginate(parseInt(page), parseInt(limit));
       const result = await BookService.getAllBooks(filters, pagination);
 
+      // Transformer les URLs des images
+      if (result.books) {
+        result.books = transformBooksWithUrls(result.books);
+      }
+
       res.json(formatResponse(true, 'Livres récupérés avec succès', result));
     } catch (error) {
       next(error);
@@ -50,7 +56,10 @@ class BookController {
         throw new AppError('Livre non trouvé', 404);
       }
 
-      res.json(formatResponse(true, 'Livre récupéré avec succès', book));
+      // Transformer les URLs des images
+      const bookWithUrls = transformBookWithUrls(book);
+
+      res.json(formatResponse(true, 'Livre récupéré avec succès', bookWithUrls));
     } catch (error) {
       next(error);
     }
@@ -73,7 +82,10 @@ class BookController {
 
       const book = await BookService.createBook(bookData);
       
-      res.status(201).json(formatResponse(true, 'Livre créé avec succès', book));
+      // Transformer les URLs des images
+      const bookWithUrls = transformBookWithUrls(book);
+      
+      res.status(201).json(formatResponse(true, 'Livre créé avec succès', bookWithUrls));
     } catch (error) {
       // Supprimer les fichiers uploadés en cas d'erreur
       if (req.files) {
@@ -132,7 +144,10 @@ class BookController {
 
       const book = await BookService.updateBook(id, updateData);
       
-      res.json(formatResponse(true, 'Livre mis à jour avec succès', book));
+      // Transformer les URLs des images
+      const bookWithUrls = transformBookWithUrls(book);
+      
+      res.json(formatResponse(true, 'Livre mis à jour avec succès', bookWithUrls));
     } catch (error) {
       // Supprimer les nouveaux fichiers uploadés en cas d'erreur
       if (req.files) {
