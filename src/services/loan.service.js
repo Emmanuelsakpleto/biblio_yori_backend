@@ -3,6 +3,103 @@ const { logger, AppError } = require('../utils/helpers');
 const { LOAN_STATUS, USER_ROLES, PAGINATION } = require('../utils/constants');
 
 class LoanService {
+
+    /**
+     * Annuler une réservation (étudiant)
+     */
+    async cancelLoan(loanId, userId, role) {
+        return await db.transaction(async (connection) => {
+            // Récupérer l'emprunt
+            const [loanRows] = await connection.execute(`
+                SELECT l.*, b.title as book_title FROM loans l JOIN books b ON l.book_id = b.id WHERE l.id = ?
+            `, [loanId]);
+            if (loanRows.length === 0) throw new AppError('Emprunt non trouvé', 404);
+            const loan = loanRows[0];
+            if (loan.status !== 'pending') throw new AppError('Seules les réservations en attente peuvent être annulées', 400);
+            if (role !== 'admin' && loan.user_id !== userId) throw new AppError('Vous ne pouvez annuler que vos propres réservations', 403);
+            // Annuler la réservation
+            await connection.execute(`UPDATE loans SET status = 'cancelled', updated_at = NOW() WHERE id = ?`, [loanId]);
+            return { ...loan, status: 'cancelled' };
+        });
+    }
+
+    /**
+     * Refuser une réservation (admin)
+     */
+    async refuseLoan(loanId, adminId) {
+        return await db.transaction(async (connection) => {
+            // Récupérer l'emprunt
+            const [loanRows] = await connection.execute(`
+                SELECT l.*, b.title as book_title FROM loans l JOIN books b ON l.book_id = b.id WHERE l.id = ?
+            `, [loanId]);
+            if (loanRows.length === 0) throw new AppError('Emprunt non trouvé', 404);
+            const loan = loanRows[0];
+            if (loan.status !== 'pending') throw new AppError('Seules les réservations en attente peuvent être refusées', 400);
+            // Refuser la réservation
+            await connection.execute(`UPDATE loans SET status = 'refused', updated_at = NOW() WHERE id = ?`, [loanId]);
+            return { ...loan, status: 'refused' };
+        });
+    }
+
+    /**
+     * Envoyer un rappel manuel (admin)
+     */
+    async sendManualReminder(loanId, adminId) {
+        // On ne modifie pas l'emprunt, on retourne juste les infos pour la notification
+        const [loanRows] = await db.query(`
+            SELECT l.*, b.title as book_title FROM loans l JOIN books b ON l.book_id = b.id WHERE l.id = ?
+        `, [loanId]);
+        if (loanRows.length === 0) throw new AppError('Emprunt non trouvé', 404);
+        return loanRows[0];
+    }
+    /**
+     * Valider une réservation (admin)
+     * Passe le statut de 'pending' à 'active', met à jour la dispo du livre, envoie une notification
+     */
+    async validateLoan(loanId, adminId) {
+        return await db.transaction(async (connection) => {
+            // Récupérer l'emprunt
+            const [loanRows] = await connection.execute(`
+                SELECT l.*, u.email, u.first_name, u.last_name, b.title as book_title, b.available_copies
+                FROM loans l
+                JOIN users u ON l.user_id = u.id
+                JOIN books b ON l.book_id = b.id
+                WHERE l.id = ?
+            `, [loanId]);
+            if (loanRows.length === 0) throw new AppError('Emprunt non trouvé', 404);
+            const loan = loanRows[0];
+            if (loan.status !== 'pending') throw new AppError('Seules les réservations en attente peuvent être validées', 400);
+            if (loan.available_copies <= 0) throw new AppError('Aucune copie disponible pour ce livre', 400);
+
+            // Mettre à jour le statut de l'emprunt et la date de début
+            const today = new Date().toISOString().split('T')[0];
+            const dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + 14); // 14 jours par défaut
+            const dueDateStr = dueDate.toISOString().split('T')[0];
+
+            await connection.execute(`
+                UPDATE loans SET status = 'active', loan_date = ?, due_date = ?, updated_at = NOW() WHERE id = ?
+            `, [today, dueDateStr, loanId]);
+
+            // Décrémenter le nombre de copies disponibles
+            await connection.execute(`
+                UPDATE books SET available_copies = available_copies - 1 WHERE id = ?
+            `, [loan.book_id]);
+
+            // Notification à l'étudiant
+            const NotificationService = require('./notification.service');
+            await NotificationService.create({
+                user_id: loan.user_id,
+                type: 'loan_validated',
+                title: `Réservation validée : ${loan.book_title}`,
+                message: `Votre réservation pour le livre "${loan.book_title}" a été validée. Vous pouvez venir le récupérer.`,
+                related_entity_type: 'loan',
+                related_entity_id: loanId
+            });
+
+            return { ...loan, status: 'active', loan_date: today, due_date: dueDateStr };
+        });
+    }
     /**
      * Créer un nouvel emprunt
      */

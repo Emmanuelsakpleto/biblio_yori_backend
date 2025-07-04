@@ -3,6 +3,128 @@ const NotificationService = require('../services/notification.service');
 const { AppError, formatResponse, paginate } = require('../utils/helpers');
 
 class LoanController {
+
+  // Annuler une réservation (étudiant)
+  static async cancelLoan(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { id: userId, role } = req.user;
+      const loan = await LoanService.cancelLoan(id, userId, role);
+      // Créer une notification pour l'utilisateur et l'admin
+      try {
+        await NotificationService.create({
+          user_id: loan.user_id,
+          type: 'reservation_cancelled',
+          title: `Réservation annulée : ${loan.book_title}`,
+          message: `Votre réservation pour le livre "${loan.book_title}" a été annulée.`,
+          related_entity_type: 'loan',
+          related_entity_id: loan.id
+        });
+      } catch (notificationError) {
+        console.warn('Erreur lors de la notification d\'annulation:', notificationError.message);
+      }
+      res.json(formatResponse(true, 'Réservation annulée avec succès', loan));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Refuser une réservation (admin)
+  static async refuseLoan(req, res, next) {
+    try {
+      const { id } = req.params;
+      const adminId = req.user.id;
+      const loan = await LoanService.refuseLoan(id, adminId);
+      // Créer une notification pour l'utilisateur
+      try {
+        await NotificationService.create({
+          user_id: loan.user_id,
+          type: 'reservation_refused',
+          title: `Réservation refusée : ${loan.book_title}`,
+          message: `Votre réservation pour le livre "${loan.book_title}" a été refusée par l'administrateur.`,
+          related_entity_type: 'loan',
+          related_entity_id: loan.id
+        });
+      } catch (notificationError) {
+        console.warn('Erreur lors de la notification de refus:', notificationError.message);
+      }
+      res.json(formatResponse(true, 'Réservation refusée', loan));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Envoyer un rappel manuel (admin)
+  static async sendManualReminder(req, res, next) {
+    try {
+      const { id } = req.params;
+      const adminId = req.user.id;
+      const loan = await LoanService.sendManualReminder(id, adminId);
+      // Créer une notification de rappel
+      try {
+        await NotificationService.create({
+          user_id: loan.user_id,
+          type: 'admin_reminder',
+          title: `Rappel administrateur : ${loan.book_title}`,
+          message: `Un rappel a été envoyé par l'administrateur concernant l'emprunt du livre "${loan.book_title}".`,
+          related_entity_type: 'loan',
+          related_entity_id: loan.id
+        });
+      } catch (notificationError) {
+        console.warn('Erreur lors de la notification de rappel:', notificationError.message);
+      }
+      res.json(formatResponse(true, 'Rappel envoyé', loan));
+    } catch (error) {
+      next(error);
+    }
+  }
+  // Créer un nouvel emprunt
+  static async createLoan(req, res, next) {
+    try {
+      const { book_id, notes, duration_days = 14 } = req.body;
+      const { id: userId } = req.user;
+
+      // Créer l'emprunt (opération critique)
+      const loan = await LoanService.createLoan({
+        user_id: userId,
+        book_id,
+        notes,
+        duration_days
+      });
+
+      // Créer une notification (opération secondaire - ne doit pas faire planter le processus)
+      try {
+        await NotificationService.createLoanNotification({
+          user_id: userId,
+          book_title: loan.book_title || loan.title,
+          loan_date: loan.loan_date,
+          due_date: loan.due_date,
+          loan_id: loan.id,
+          type: 'loan_created'
+        });
+      } catch (notificationError) {
+        // Logger l'erreur de notification mais ne pas faire planter la requête
+        console.warn('Erreur lors de la création de la notification d\'emprunt:', notificationError.message);
+      }
+
+      res.status(201).json(formatResponse(true, 'Emprunt créé avec succès', loan));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Valider une réservation (admin)
+  static async validateLoan(req, res, next) {
+    try {
+      const { id } = req.params;
+      const adminId = req.user.id;
+      const result = await LoanService.validateLoan(id, adminId);
+      // Envoyer une notification à l'étudiant (géré dans le service)
+      res.json(formatResponse(true, 'Réservation validée avec succès', result));
+    } catch (error) {
+      next(error);
+    }
+  }
   // Créer un nouvel emprunt
   static async createLoan(req, res, next) {
     try {
@@ -500,5 +622,4 @@ class LoanController {
     }
   }
 }
-
 module.exports = LoanController;

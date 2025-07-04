@@ -38,29 +38,34 @@ async function resetDatabase() {
     
     connection = await mysql.createConnection(DB_CONFIG);
     
+
     // Désactiver les contraintes de clés étrangères
     await connection.execute('SET FOREIGN_KEY_CHECKS = 0');
-    
-    // Supprimer toutes les tables dans l'ordre inverse des dépendances
-    const dropQueries = [
-      'DROP TABLE IF EXISTS user_sessions',
-      'DROP TABLE IF EXISTS notifications',
-      'DROP TABLE IF EXISTS reviews', 
-      'DROP TABLE IF EXISTS loans',
-      'DROP TABLE IF EXISTS books',
-      'DROP TABLE IF EXISTS users'
+
+    // Vider les tables sans les supprimer
+    const truncateQueries = [
+      'TRUNCATE TABLE user_sessions',
+      'TRUNCATE TABLE notifications',
+      'TRUNCATE TABLE reviews',
+      'TRUNCATE TABLE loans',
+      'TRUNCATE TABLE books',
+      'TRUNCATE TABLE users'
     ];
-    
-    for (const query of dropQueries) {
-      await connection.execute(query);
-      log(`✅ ${query}`, colors.green);
+
+    for (const query of truncateQueries) {
+      try {
+        await connection.execute(query);
+        log(`✅ ${query}`, colors.green);
+      } catch (err) {
+        log(`⚠️  ${query} : ${err.message}`, colors.yellow);
+      }
     }
-    
+
     // Réactiver les contraintes
     await connection.execute('SET FOREIGN_KEY_CHECKS = 1');
-    
-    log('\n🗑️  Toutes les tables ont été supprimées!', colors.yellow);
-    log('💡 Exécutez "npm run db:init" pour recréer la base', colors.cyan);
+
+    log('\n🗑️  Toutes les tables ont été vidées (TRUNCATE) !', colors.yellow);
+    log('💡 Vous pouvez maintenant réinsérer vos données de test.', colors.cyan);
     
   } catch (error) {
     log(`❌ Erreur: ${error.message}`, colors.red);

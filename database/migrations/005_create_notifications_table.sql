@@ -11,7 +11,7 @@ DROP TABLE IF EXISTS notifications;
 CREATE TABLE notifications (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    type ENUM('loan_reminder', 'overdue_notice', 'reservation_ready', 'book_returned', 'account_created', 'password_reset') NOT NULL,
+    type ENUM('loan_reminder', 'overdue_notice', 'reservation_ready', 'reservation_refused', 'reservation_cancelled', 'book_returned', 'admin_reminder', 'account_created', 'password_reset') NOT NULL,
     title VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
     is_read BOOLEAN DEFAULT FALSE,

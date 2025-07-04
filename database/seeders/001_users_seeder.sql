@@ -6,18 +6,6 @@
 -- Hash généré avec bcrypt (rounds=10)
 -- ===================================
 
--- Vider la table users (pour les tests)
-DELETE FROM users WHERE email IN (
-    'admin@lectura.com',
-    'librarian@lectura.com', 
-    'student@lectura.com',
-    'jean.dupont@student.univ.com',
-    'marie.martin@student.univ.com',
-    'pierre.durand@student.univ.com',
-    'sophie.biblio@lectura.com',
-    'test@example.com'
-);
-
 -- Insérer les utilisateurs par défaut
 INSERT INTO users (
     email, 
@@ -31,7 +19,7 @@ INSERT INTO users (
 ) VALUES 
 -- 🔑 ADMINISTRATEUR PRINCIPAL
 (
-    'admin@lectura.com',
+    'admin@yori.com',
     '$2b$10$Rp4xLZK4KgRVVJ8TVGVHKOVoa8kBznqOw8OJ8cnMUV01W6lOD2dq.', -- Password123!
     'Admin',
     'Principal',
@@ -43,7 +31,7 @@ INSERT INTO users (
 
 -- 📚 BIBLIOTHÉCAIRE
 (
-    'librarian@lectura.com',
+    'librarian@yori.com',
     '$2b$10$Rp4xLZK4KgRVVJ8TVGVHKOVoa8kBznqOw8OJ8cnMUV01W6lOD2dq.', -- Password123!
     'Sophie',
     'Bibliothèque',
@@ -55,7 +43,7 @@ INSERT INTO users (
 
 -- 📚 AUTRE BIBLIOTHÉCAIRE
 (
-    'sophie.biblio@lectura.com',
+    'sophie.biblio@yori.com',
     '$2b$10$Rp4xLZK4KgRVVJ8TVGVHKOVoa8kBznqOw8OJ8cnMUV01W6lOD2dq.', -- Password123!
     'Sophie',
     'Martin',
@@ -67,7 +55,7 @@ INSERT INTO users (
 
 -- 🎓 ÉTUDIANTS
 (
-    'student@lectura.com',
+    'student@yori.com',
     '$2b$10$Rp4xLZK4KgRVVJ8TVGVHKOVoa8kBznqOw8OJ8cnMUV01W6lOD2dq.', -- Password123!
     'Étudiant',
     'Principal',

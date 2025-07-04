@@ -1,0 +1,383 @@
+Attached HTML and CSS Context
+
+<div data-nextjs-dialog-header="true" class="nextjs-container-errors-header"><div data-nextjs-dialog-left-right="true"><nav><button type="button" disabled="" aria-disabled="true"><svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><title>previous</title><path d="M6.99996 1.16666L1.16663 6.99999L6.99996 12.8333M12.8333 6.99999H1.99996H12.8333Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><button type="button" disabled="" aria-disabled="true"><svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><title>next</title><path d="M6.99996 1.16666L12.8333 6.99999L6.99996 12.8333M1.16663 6.99999H12H1.16663Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></button><small><span>1</span> of <span data-nextjs-dialog-header-total-count="true">1</span> error</small></nav><button data-nextjs-errors-dialog-left-right-close-button="true" type="button" aria-label="Close"><span aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path><path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></button></div><h1 id="nextjs__container_errors_label">Unhandled Runtime Error</h1><p id="nextjs__container_errors_desc" class="nextjs__container_errors_desc">Error: The default export is not a React Component in page: "/profile"</p></div>
+
+
+/* Matched Rule from user-agent */
+div {
+  display: block;
+}
+
+/* Matched Rule from user-agent */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Matched Rule from regular */
+*, *::before, *::after {
+  box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* Matched Rule from regular */
+[data-nextjs-dialog-content] > [data-nextjs-dialog-header] {
+  flex-shrink: 0;
+  margin-bottom: var(--size-gap-double);
+  flex-shrink: 0;
+  margin-bottom: var(--size-gap-double);
+}
+
+/* Inherited from ancestor level 1 (user-agent) */
+div {
+  display: block;
+}
+
+/* Inherited from ancestor level 1 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 1 (regular) */
+*, *::before, *::after {
+  box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* Inherited from ancestor level 1 (regular) */
+[data-nextjs-dialog-content] {
+  overflow-y: auto;
+  border: none;
+  margin: 0;
+  padding: calc(var(--size-gap-double) + var(--size-gap-half))
+      var(--size-gap-double);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  border-top-width: initial;
+  border-right-width: initial;
+  border-bottom-width: initial;
+  border-left-width: initial;
+  border-top-style: none;
+  border-right-style: none;
+  border-bottom-style: none;
+  border-left-style: none;
+  border-top-color: initial;
+  border-right-color: initial;
+  border-bottom-color: initial;
+  border-left-color: initial;
+  border-image-source: initial;
+  border-image-slice: initial;
+  border-image-width: initial;
+  border-image-outset: initial;
+  border-image-repeat: initial;
+  margin-top: 0px;
+  margin-right: 0px;
+  margin-bottom: 0px;
+  margin-left: 0px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Inherited from ancestor level 2 (user-agent) */
+div {
+  display: block;
+}
+
+/* Inherited from ancestor level 2 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 2 (regular) */
+*, *::before, *::after {
+  box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* Inherited from ancestor level 2 (regular) */
+[data-nextjs-dialog] {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  outline: none;
+  background: var(--color-background);
+  border-radius: var(--size-gap);
+  box-shadow: 0 var(--size-gap-half) var(--size-gap-double)
+      rgba(0, 0, 0, 0.25);
+  max-height: calc(100% - 56px);
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-right: auto;
+  margin-left: auto;
+  outline-color: initial;
+  outline-style: none;
+  outline-width: initial;
+  box-shadow: 0 var(--size-gap-half) var(--size-gap-double)
+      rgba(0, 0, 0, 0.25);
+  max-height: calc(100% - 56px);
+  overflow-y: hidden;
+}
+
+/* Inherited from ancestor level 2 (regular) */
+[data-nextjs-dialog] {
+  max-width: 540px;
+  box-shadow: 0 var(--size-gap) var(--size-gap-quad) rgba(0, 0, 0, 0.25);
+  max-width: 540px;
+  box-shadow: 0 var(--size-gap) var(--size-gap-quad) rgba(0, 0, 0, 0.25);
+}
+
+/* Inherited from ancestor level 2 (regular) */
+[data-nextjs-dialog] {
+  max-width: 720px;
+  max-width: 720px;
+}
+
+/* Inherited from ancestor level 3 (user-agent) */
+div {
+  display: block;
+}
+
+/* Inherited from ancestor level 3 (user-agent) */
+address, blockquote, center, div, figure, figcaption, footer, form, header, hr, legend, listing, main, p, plaintext, pre, summary, xmp, article, aside, h1, h2, h3, h4, h5, h6, hgroup, nav, section, search, table, caption, colgroup, col, thead, tbody, tfoot, tr, td, th, dir, dd, dl, dt, menu, ol, ul, li, bdi, output, [dir="ltr" i], [dir="rtl" i], [dir="auto" i] {
+  unicode-bidi: isolate;
+}
+
+/* Inherited from ancestor level 3 (regular) */
+*, *::before, *::after {
+  box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+/* Inherited from ancestor level 3 (regular) */
+[data-nextjs-dialog-overlay] {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  overflow: auto;
+  z-index: 9000;
+  display: flex;
+  align-content: center;
+  align-items: center;
+  flex-direction: column;
+  padding: 10vh 15px 0;
+  position: fixed;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  overflow-x: auto;
+  overflow-y: auto;
+  z-index: 9000;
+  display: flex;
+  align-content: center;
+  align-items: center;
+  flex-direction: column;
+  padding-top: 10vh;
+  padding-right: 15px;
+  padding-bottom: 0px;
+  padding-left: 15px;
+}
+
+/* Inherited from ancestor level 3 (regular) */
+[data-nextjs-dialog-overlay] {
+  padding: 15px 15px 0;
+  padding-top: 15px;
+  padding-right: 15px;
+  padding-bottom: 0px;
+  padding-left: 15px;
+}
+
+/* Inherited from ancestor level 3 (regular) */
+[data-nextjs-dialog-overlay] {
+  max-height: calc(100% - 15px);
+  max-height: calc(100% - 15px);
+}
+
+/* Inherited from ancestor level 4 (regular) */
+:host {
+  all: initial;
+  direction: ltr;
+  all: initial;
+  direction: ltr;
+}
+
+/* Inherited from ancestor level 4 (regular) */
+:host {
+  font-family: sans-serif;
+  line-height: 1.15;
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  font-family: sans-serif;
+  line-height: 1.15;
+  text-size-adjust: 100%;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+/* Inherited from ancestor level 4 (regular) */
+:host {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+            'Helvetica Neue', Arial, 'Noto Sans', sans-serif,
+            'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+            'Noto Color Emoji';
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--color-font);
+  text-align: left;
+  background-color: #fff;
+  margin-top: 0px;
+  margin-right: 0px;
+  margin-bottom: 0px;
+  margin-left: 0px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--color-font);
+  text-align: left;
+  background-color: rgb(255, 255, 255);
+}
+
+/* Inherited from ancestor level 4 (regular) */
+:host {
+  --size-gap-half: 4px;
+  --size-gap: 8px;
+  --size-gap-double: 16px;
+  --size-gap-triple: 24px;
+  --size-gap-quad: 32px;
+  --size-font-small: 14px;
+  --size-font: 16px;
+  --size-font-big: 20px;
+  --size-font-bigger: 24px;
+  --color-background: white;
+  --color-font: #757575;
+  --color-backdrop: rgba(17, 17, 17, 0.2);
+  --color-title-color: #1f1f1f;
+  --color-stack-h6: #222;
+  --color-stack-headline: #666;
+  --color-stack-subline: #999;
+  --color-stack-notes: #777;
+  --color-accents-1: #808080;
+  --color-accents-2: #222222;
+  --color-accents-3: #404040;
+  --color-text-color-red-1: #ff5555;
+  --color-text-background-red-1: #fff9f9;
+  --font-stack-monospace: 'SFMono-Regular', Consolas, 'Liberation Mono',
+            Menlo, Courier, monospace;
+  --font-stack-sans: -apple-system, 'Source Sans Pro', sans-serif;
+  --color-ansi-selection: rgba(95, 126, 151, 0.48);
+  --color-ansi-bg: #111111;
+  --color-ansi-fg: #cccccc;
+  --color-ansi-white: #777777;
+  --color-ansi-black: #141414;
+  --color-ansi-blue: #00aaff;
+  --color-ansi-cyan: #88ddff;
+  --color-ansi-green: #98ec65;
+  --color-ansi-magenta: #aa88ff;
+  --color-ansi-red: #ff5555;
+  --color-ansi-yellow: #ffcc33;
+  --color-ansi-bright-white: #ffffff;
+  --color-ansi-bright-black: #777777;
+  --color-ansi-bright-blue: #33bbff;
+  --color-ansi-bright-cyan: #bbecff;
+  --color-ansi-bright-green: #b6f292;
+  --color-ansi-bright-magenta: #cebbff;
+  --color-ansi-bright-red: #ff8888;
+  --color-ansi-bright-yellow: #ffd966;
+  --size-gap-half: 4px;
+  --size-gap: 8px;
+  --size-gap-double: 16px;
+  --size-gap-triple: 24px;
+  --size-gap-quad: 32px;
+  --size-font-small: 14px;
+  --size-font: 16px;
+  --size-font-big: 20px;
+  --size-font-bigger: 24px;
+  --color-background: white;
+  --color-font: #757575;
+  --color-backdrop: rgba(17, 17, 17, 0.2);
+  --color-title-color: #1f1f1f;
+  --color-stack-h6: #222;
+  --color-stack-headline: #666;
+  --color-stack-subline: #999;
+  --color-stack-notes: #777;
+  --color-accents-1: #808080;
+  --color-accents-2: #222222;
+  --color-accents-3: #404040;
+  --color-text-color-red-1: #ff5555;
+  --color-text-background-red-1: #fff9f9;
+  --font-stack-monospace: 'SFMono-Regular', Consolas, 'Liberation Mono',
+            Menlo, Courier, monospace;
+  --font-stack-sans: -apple-system, 'Source Sans Pro', sans-serif;
+  --color-ansi-selection: rgba(95, 126, 151, 0.48);
+  --color-ansi-bg: #111111;
+  --color-ansi-fg: #cccccc;
+  --color-ansi-white: #777777;
+  --color-ansi-black: #141414;
+  --color-ansi-blue: #00aaff;
+  --color-ansi-cyan: #88ddff;
+  --color-ansi-green: #98ec65;
+  --color-ansi-magenta: #aa88ff;
+  --color-ansi-red: #ff5555;
+  --color-ansi-yellow: #ffcc33;
+  --color-ansi-bright-white: #ffffff;
+  --color-ansi-bright-black: #777777;
+  --color-ansi-bright-blue: #33bbff;
+  --color-ansi-bright-cyan: #bbecff;
+  --color-ansi-bright-green: #b6f292;
+  --color-ansi-bright-magenta: #cebbff;
+  --color-ansi-bright-red: #ff8888;
+  --color-ansi-bright-yellow: #ffd966;
+}
+
+/* Inherited from ancestor level 4 (regular) */
+:host {
+  --color-background: rgb(28, 28, 30);
+  --color-font: white;
+  --color-backdrop: rgb(44, 44, 46);
+  --color-title-color: #fafafa;
+  --color-stack-h6: rgb(200, 200, 204);
+  --color-stack-headline: rgb(99, 99, 102);
+  --color-stack-notes: #a9a9a9;
+  --color-stack-subline: rgb(121, 121, 121);
+  --color-accents-3: rgb(118, 118, 118);
+  --color-text-background-red-1: #2a1e1e;
+  --color-background: rgb(28, 28, 30);
+  --color-font: white;
+  --color-backdrop: rgb(44, 44, 46);
+  --color-title-color: #fafafa;
+  --color-stack-h6: rgb(200, 200, 204);
+  --color-stack-headline: rgb(99, 99, 102);
+  --color-stack-notes: #a9a9a9;
+  --color-stack-subline: rgb(121, 121, 121);
+  --color-accents-3: rgb(118, 118, 118);
+  --color-text-background-red-1: #2a1e1e;
+}
+
+/* Inherited from ancestor level 5 (user-agent) */
+body {
+  display: block;
+  margin-top: 8px;
+  margin-right: 8px;
+  margin-bottom: 8px;
+  margin-left: 8px;
+}
+
+/* Inherited from ancestor level 6 (user-agent) */
+html {
+  display: block;
+}
+
+/* Inherited from ancestor level 6 (user-agent) */
+:root {
+  view-transition-name: root;
+}

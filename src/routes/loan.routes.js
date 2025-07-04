@@ -39,8 +39,14 @@ router.get('/stats/summary', requireAdmin, LoanController.getLoanStats);
 router.get('/reservations/all', requireAdmin, LoanController.getLoanReservations);
 router.get('/export/data', requireAdmin, LoanController.exportLoans);
 
+
+// Actions sur les emprunts (admin/étudiant)
+router.patch('/:id/validate', requireAdmin, LoanController.validateLoan);
 router.patch('/:id/overdue', requireAdmin, LoanController.markAsOverdue);
 router.patch('/:id/penalty', requireAdmin, LoanController.applyPenalty);
+router.patch('/:id/cancel', LoanController.cancelLoan); // étudiant
+router.patch('/:id/refuse', requireAdmin, LoanController.refuseLoan); // admin
+router.patch('/:id/remind', requireAdmin, LoanController.sendManualReminder); // admin
 router.post('/reminders/send', requireAdmin, LoanController.sendReminders);
 
 module.exports = router;

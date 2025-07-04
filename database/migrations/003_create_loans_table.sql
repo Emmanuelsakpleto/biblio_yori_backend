@@ -16,7 +16,7 @@ CREATE TABLE loans (
     due_date DATE NOT NULL,
     return_date DATE NULL,
     extension_count INT DEFAULT 0,
-    status ENUM('active', 'returned', 'overdue', 'extended') DEFAULT 'active',
+    status ENUM('pending', 'active', 'returned', 'overdue', 'extended') DEFAULT 'pending',
     notes TEXT,
     fine_amount DECIMAL(10,2) DEFAULT 0.00,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
