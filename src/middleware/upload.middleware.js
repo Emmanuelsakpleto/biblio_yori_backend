@@ -160,20 +160,25 @@ const processUploadedFile = (req, res, next) => {
   if (req.file) {
     // Ajouter des métadonnées utiles
     req.file.relativePath = req.file.path.replace(path.join(__dirname, '../../'), '');
-    req.file.url = `/${req.file.relativePath.replace(/\\/g, '/')}`;
+    // Construire l'URL correcte avec le préfixe /uploads
+    const cleanPath = req.file.relativePath.replace(/\\/g, '/');
+    req.file.url = cleanPath.startsWith('uploads/') ? `/${cleanPath}` : `/uploads/${cleanPath}`;
     
     logger.info('Fichier uploadé:', {
       originalName: req.file.originalname,
       filename: req.file.filename,
       size: req.file.size,
-      path: req.file.relativePath
+      path: req.file.relativePath,
+      url: req.file.url
     });
   }
   
   if (req.files && Array.isArray(req.files)) {
     req.files.forEach(file => {
       file.relativePath = file.path.replace(path.join(__dirname, '../../'), '');
-      file.url = `/${file.relativePath.replace(/\\/g, '/')}`;
+      // Construire l'URL correcte avec le préfixe /uploads
+      const cleanPath = file.relativePath.replace(/\\/g, '/');
+      file.url = cleanPath.startsWith('uploads/') ? `/${cleanPath}` : `/uploads/${cleanPath}`;
     });
     
     logger.info(`${req.files.length} fichiers uploadés`);
