@@ -1,5 +1,6 @@
 const LoanService = require('../services/loan.service');
 const NotificationService = require('../services/notification.service');
+const EmailService = require('../services/email.service');
 const { AppError, formatResponse, paginate } = require('../utils/helpers');
 
 class LoanController {
@@ -45,6 +46,10 @@ class LoanController {
           related_entity_type: 'loan',
           related_entity_id: loan.id
         });
+        // Envoi email refus à l'étudiant
+        const user = loan.user || loan.borrower; // selon structure
+        const book = loan.book || { title: loan.book_title, author: loan.book_author };
+        await EmailService.sendLoanRefusedNotification(user, book, loan, loan.refusal_reason || '');
       } catch (notificationError) {
         console.warn('Erreur lors de la notification de refus:', notificationError.message);
       }
@@ -83,7 +88,6 @@ class LoanController {
     try {
       const { book_id, notes, duration_days = 14 } = req.body;
       const { id: userId } = req.user;
-
       // Créer l'emprunt (opération critique)
       const loan = await LoanService.createLoan({
         user_id: userId,
@@ -91,7 +95,6 @@ class LoanController {
         notes,
         duration_days
       });
-
       // Créer une notification (opération secondaire - ne doit pas faire planter le processus)
       try {
         await NotificationService.createLoanNotification({
@@ -102,11 +105,14 @@ class LoanController {
           loan_id: loan.id,
           type: 'loan_created'
         });
+        // Notifier l'admin par email (demande d'emprunt)
+        const admin = await LoanService.getAdminForNotification(); // à adapter selon votre logique
+        const user = req.user;
+        const book = loan.book || { title: loan.book_title, author: loan.book_author };
+        await EmailService.sendLoanRequestAdminNotification(admin, user, book, loan);
       } catch (notificationError) {
-        // Logger l'erreur de notification mais ne pas faire planter la requête
-        console.warn('Erreur lors de la création de la notification d\'emprunt:', notificationError.message);
+        console.warn('Erreur lors de la notification d\'emprunt:', notificationError.message);
       }
-
       res.status(201).json(formatResponse(true, 'Emprunt créé avec succès', loan));
     } catch (error) {
       next(error);
@@ -249,25 +255,20 @@ class LoanController {
       const { id } = req.params;
       const { id: userId, role } = req.user;
       const { condition, notes } = req.body;
-
       // Récupérer l'emprunt pour vérifier les permissions
       const existingLoan = await LoanService.getLoanById(id);
       if (!existingLoan) {
         throw new AppError('Emprunt non trouvé', 404);
       }
-
-      // Vérifier les permissions
       if (role !== 'admin' && existingLoan.user_id !== userId) {
         throw new AppError(`Vous ne pouvez retourner que vos propres emprunts. Cet emprunt (ID: ${id}) appartient à l'utilisateur ID: ${existingLoan.user_id}, mais vous êtes l'utilisateur ID: ${userId}`, 403);
       }
-
       // Retourner le livre (opération critique)
       const loan = await LoanService.returnBook(id, {
         condition,
         notes,
         returned_by: userId
       });
-
       // Créer une notification (opération secondaire - ne doit pas faire planter le processus)
       try {
         await NotificationService.createLoanNotification({
@@ -276,11 +277,16 @@ class LoanController {
           loan_id: loan.id,
           type: 'loan_returned'
         });
+        // Email confirmation retour à l'étudiant
+        const user = loan.user || req.user;
+        const book = loan.book || { title: loan.title, author: loan.book_author };
+        await EmailService.sendReturnNotification(user, book, loan);
+        // Email info retour à l'admin
+        const admin = await LoanService.getAdminForNotification();
+        await EmailService.sendReturnAdminNotification(admin, user, book, loan);
       } catch (notificationError) {
-        // Logger l'erreur de notification mais ne pas faire planter la requête
-        console.warn('Erreur lors de la création de la notification de retour:', notificationError.message);
+        console.warn('Erreur lors de la notification de retour:', notificationError.message);
       }
-
       res.json(formatResponse(true, 'Livre retourné avec succès', loan));
     } catch (error) {
       next(error);
@@ -293,25 +299,15 @@ class LoanController {
       const { id } = req.params;
       const { id: userId, role } = req.user;
       const { duration_days, extension_days } = req.body;
-      
-      // Supporter les deux noms de paramètre pour la compatibilité
       const extensionDays = duration_days || extension_days || 14;
-
-      // Récupérer l'emprunt pour vérifier les permissions
       const existingLoan = await LoanService.getLoanById(id);
       if (!existingLoan) {
         throw new AppError('Emprunt non trouvé', 404);
       }
-
-      // Vérifier les permissions (seuls les admins peuvent renouveler)
       if (role !== 'admin') {
         throw new AppError('Seuls les administrateurs peuvent prolonger des emprunts', 403);
       }
-
-      // Renouveler l'emprunt (opération critique)
       const loan = await LoanService.renewLoan(id, userId, extensionDays, true); // true = isAdmin
-
-      // Créer une notification (opération secondaire - ne doit pas faire planter le processus)
       try {
         await NotificationService.createLoanNotification({
           user_id: loan.user_id,
@@ -321,11 +317,13 @@ class LoanController {
           loan_id: loan.id,
           type: 'loan_renewed'
         });
+        // Email confirmation renouvellement à l'étudiant
+        const user = loan.user || req.user;
+        const book = loan.book || { title: loan.title, author: loan.book_author };
+        await EmailService.sendRenewalNotification(user, book, loan);
       } catch (notificationError) {
-        // Logger l'erreur de notification mais ne pas faire planter la requête
-        console.warn('Erreur lors de la création de la notification de renouvellement:', notificationError.message);
+        console.warn('Erreur lors de la notification de renouvellement:', notificationError.message);
       }
-
       res.json(formatResponse(true, 'Emprunt renouvelé avec succès', loan));
     } catch (error) {
       next(error);
@@ -361,13 +359,10 @@ class LoanController {
     try {
       const { id } = req.params;
       const { penalty_amount, notes } = req.body;
-
       const loan = await LoanService.markAsOverdue(id, {
         penalty_amount,
         notes
       });
-
-      // Créer une notification pour l'utilisateur
       await NotificationService.createLoanNotification({
         user_id: loan.user_id,
         book_title: loan.book_title,
@@ -375,7 +370,14 @@ class LoanController {
         loan_id: loan.id,
         type: 'loan_overdue'
       });
-
+      // Email de retard à l'étudiant
+      const user = loan.user;
+      const book = loan.book || { title: loan.book_title, author: loan.book_author };
+      const daysOverdue = loan.late_days || 1;
+      await EmailService.sendOverdueNotification(user, book, loan, daysOverdue);
+      // Email de retard à l'admin
+      const admin = await LoanService.getAdminForNotification();
+      await EmailService.sendOverdueAdminNotification(admin, user, book, loan, daysOverdue);
       res.json(formatResponse(true, 'Emprunt marqué comme en retard', loan));
     } catch (error) {
       next(error);

@@ -98,6 +98,11 @@ class NotificationModel {
    * @returns {Promise<Object>} - Notifications de l'utilisateur
    */
   static async findByUser(userId, options = {}) {
+    if (!userId) {
+      const err = new Error('userId manquant pour la récupération des notifications');
+      logger.error('Erreur lors de la récupération des notifications:', err);
+      throw err;
+    }
     try {
       const {
         page = 1,

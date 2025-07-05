@@ -144,7 +144,7 @@ class EmailService {
      * Envoyer une notification de retour
      */
     async sendReturnNotification(user, book, loan) {
-        const subject = 'Retour de livre confirmé - LECTURA';
+        const subject = 'Retour de livre confirmé - YORI';
         const html = this.getReturnNotificationTemplate(user, book, loan);
         
         return await this.sendEmail(user.email, subject, html);
@@ -154,7 +154,7 @@ class EmailService {
      * Envoyer une notification de renouvellement
      */
     async sendRenewalNotification(user, book, loan) {
-        const subject = 'Renouvellement d\'emprunt confirmé - LECTURA';
+        const subject = 'Renouvellement d\'emprunt confirmé - YORI';
         const html = this.getRenewalNotificationTemplate(user, book, loan);
         
         return await this.sendEmail(user.email, subject, html);
@@ -164,7 +164,7 @@ class EmailService {
      * Envoyer une notification de disponibilité de livre
      */
     async sendBookAvailableNotification(user, book) {
-        const subject = `Livre disponible : ${book.title} - LECTURA`;
+        const subject = `Livre disponible : ${book.title} - YORI`;
         const html = this.getBookAvailableTemplate(user, book);
         
         return await this.sendEmail(user.email, subject, html);
@@ -174,7 +174,7 @@ class EmailService {
      * Envoyer un rapport mensuel
      */
     async sendMonthlyReport(user, reportData) {
-        const subject = 'Votre rapport mensuel LECTURA';
+        const subject = 'Votre rapport mensuel YORI';
         const html = this.getMonthlyReportTemplate(user, reportData);
         
         return await this.sendEmail(user.email, subject, html);
@@ -284,7 +284,7 @@ class EmailService {
             <p>C'est un plaisir de vous accueillir dans notre bibliothèque. Nous espérons que vous trouverez de belles lectures et que vous profiterez pleinement de nos services.</p>
             <div class="highlight">
                 <h3>Votre compte est maintenant actif.</h3>
-                <p><strong>Nom d'utilisateur :</strong> ${user.username}</p>
+                <p><strong>Nom :</strong> ${user.first_name} ${user.last_name}</p>
                 <p><strong>Email :</strong> ${user.email}</p>
             </div>
             <p>N'hésitez pas à explorer le catalogue, emprunter des livres, et partager vos avis avec la communauté.</p>
@@ -295,7 +295,7 @@ class EmailService {
             </div>
             <p>Nous restons à votre écoute pour toute question.<br/>Bonne lecture et à bientôt !</p>
         `;
-        return this.getBaseTemplate('Bienvenue sur LECTURA', content);
+        return this.getBaseTemplate('Bienvenue sur YORI', content);
     }
     
     /**
@@ -465,7 +465,7 @@ class EmailService {
                 '<div class="highlight"><p>✅ Retour dans les délais ! Merci de votre ponctualité.</p></div>'
             }
             
-            <p>Merci d'utiliser LECTURA ! N'hésitez pas à emprunter d'autres livres.</p>
+            <p>Merci d'utiliser YORI ! N'hésitez pas à emprunter d'autres livres.</p>
             
             <div style="text-align: center;">
                 <a href="${process.env.FRONTEND_URL}/books" class="button">
@@ -549,7 +549,7 @@ class EmailService {
         const content = `
             <h2>📊 Votre rapport mensuel</h2>
             <p>Bonjour ${user.first_name},</p>
-            <p>Voici un résumé de votre activité ce mois-ci sur LECTURA.</p>
+            <p>Voici un résumé de votre activité ce mois-ci sur YORI.</p>
             
             <div class="highlight">
                 <h3>📈 Statistiques du mois</h3>

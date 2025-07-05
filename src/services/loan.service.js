@@ -96,6 +96,18 @@ class LoanService {
                 related_entity_type: 'loan',
                 related_entity_id: loanId
             });
+            // Notification à l'admin
+            const [adminRows] = await connection.execute(`SELECT id, email, first_name, last_name FROM users WHERE role = 'admin'`);
+            for (const admin of adminRows) {
+                await NotificationService.create({
+                    user_id: admin.id,
+                    type: 'loan_validated_admin',
+                    title: `Emprunt validé pour ${loan.first_name} ${loan.last_name}`,
+                    message: `L'emprunt du livre "${loan.book_title}" par ${loan.first_name} ${loan.last_name} a été validé.`,
+                    related_entity_type: 'loan',
+                    related_entity_id: loanId
+                });
+            }
 
             return { ...loan, status: 'active', loan_date: today, due_date: dueDateStr };
         });
@@ -166,12 +178,7 @@ class LoanService {
                 VALUES (?, ?, ?, ?, 'pending', ?, NOW(), NOW())
             `, [user_id, book_id, loanDate, dueDateStr, notes || null]);
             
-            // Décrémenter le nombre de copies disponibles
-            await connection.execute(`
-                UPDATE books 
-                SET available_copies = available_copies - 1
-                WHERE id = ?
-            `, [book_id]);
+            // NE PAS décrémenter ici : la décrémentation se fait lors de la validation de l'emprunt (validateLoan)
             
             // Récupérer l'emprunt créé avec les détails du livre
             const [createdLoanRows] = await connection.execute(`
