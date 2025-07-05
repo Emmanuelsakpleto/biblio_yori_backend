@@ -1062,6 +1062,113 @@ class BookService {
       throw error;
     }
   }
+
+  /**
+   * Obtenir les likes d'un livre et l'état de like de l'utilisateur
+   * @param {number} bookId - ID du livre
+   * @param {number} userId - ID de l'utilisateur
+   * @returns {Promise<Object>} - Informations sur les likes
+   */
+  static async getBookLikes(bookId, userId) {
+    try {
+      // Vérifier que le livre existe
+      const bookExists = await this.getBookById(bookId);
+      if (!bookExists) {
+        throw new Error('Livre non trouvé');
+      }
+
+      // Compter le nombre total de likes pour ce livre
+      const countSql = `
+        SELECT COUNT(*) as likes
+        FROM user_book_likes 
+        WHERE book_id = ?
+      `;
+      
+      const [countResult] = await database.query(countSql, [bookId]);
+      const totalLikes = countResult.likes || 0;
+
+      // Vérifier si l'utilisateur a déjà liké ce livre
+      const userLikeSql = `
+        SELECT COUNT(*) as count
+        FROM user_book_likes 
+        WHERE book_id = ? AND user_id = ?
+      `;
+      
+      const [userResult] = await database.query(userLikeSql, [bookId, userId]);
+      const isLiked = userResult.count > 0;
+
+      return {
+        likes: totalLikes,
+        isLiked: isLiked
+      };
+    } catch (error) {
+      logger.error('Erreur lors de la récupération des likes:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Toggle like/unlike d'un livre
+   * @param {number} bookId - ID du livre
+   * @param {number} userId - ID de l'utilisateur
+   * @returns {Promise<Object>} - Résultat de l'action
+   */
+  static async toggleLike(bookId, userId) {
+    try {
+      // Vérifier que le livre existe
+      const bookExists = await this.getBookById(bookId);
+      if (!bookExists) {
+        throw new Error('Livre non trouvé');
+      }
+
+      // Vérifier si l'utilisateur a déjà liké ce livre
+      const checkSql = `
+        SELECT id FROM user_book_likes 
+        WHERE book_id = ? AND user_id = ?
+      `;
+      
+      const [existing] = await database.query(checkSql, [bookId, userId]);
+
+      if (existing.length > 0) {
+        // L'utilisateur a déjà liké, on retire le like
+        const deleteSql = `
+          DELETE FROM user_book_likes 
+          WHERE book_id = ? AND user_id = ?
+        `;
+        
+        await database.query(deleteSql, [bookId, userId]);
+        
+        // Récupérer le nouveau nombre de likes
+        const result = await this.getBookLikes(bookId, userId);
+        
+        return {
+          action: 'unliked',
+          likes: result.likes,
+          isLiked: false
+        };
+      } else {
+        // L'utilisateur n'a pas encore liké, on ajoute le like
+        const insertSql = `
+          INSERT INTO user_book_likes (book_id, user_id, created_at) 
+          VALUES (?, ?, NOW())
+        `;
+        
+        await database.query(insertSql, [bookId, userId]);
+        
+        // Récupérer le nouveau nombre de likes
+        const result = await this.getBookLikes(bookId, userId);
+        
+        return {
+          action: 'liked',
+          likes: result.likes,
+          isLiked: true
+        };
+      }
+    } catch (error) {
+      logger.error('Erreur lors du toggle like:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = BookService;

@@ -44,6 +44,8 @@ router.post('/:id/reserve', BookController.reserveBook);
 router.delete('/:id/reserve', BookController.cancelReservation);
 router.get('/reservations/me', BookController.getUserReservations);
 router.get('/:id/download', BookController.downloadPDF);
+router.get('/:id/likes', BookController.getBookLikes);
+router.post('/:id/like', BookController.toggleLike);
 
 // Routes administrateur seulement
 router.use(requireAdmin);

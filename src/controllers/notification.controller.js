@@ -5,10 +5,9 @@ class NotificationController {
   // Obtenir les notifications de l'utilisateur connecté
   static async getMyNotifications(req, res, next) {
     try {
-      // DEBUG: Afficher l'objet user reçu
-      console.log('user reçu dans notifications:', req.user);
-      // Correction extraction userId (accepte id ou userId)
-      const userId = req.user.id || req.user.userId;
+      // Extraction userId - même approche que le contrôleur reviews
+      const { id: userId } = req.user;
+      
       if (!userId) {
         throw new AppError('Impossible de déterminer l\'utilisateur connecté', 401);
       }
@@ -65,7 +64,12 @@ class NotificationController {
   static async markAsRead(req, res, next) {
     try {
       const { id } = req.params;
-      const { userId } = req.user;
+      // Extraction userId - même approche que le contrôleur reviews
+      const { id: userId } = req.user;
+
+      if (!userId) {
+        throw new AppError('Impossible de déterminer l\'utilisateur connecté', 401);
+      }
 
       const notification = await NotificationService.markAsRead(id, userId);
 
@@ -78,7 +82,12 @@ class NotificationController {
   // Marquer toutes les notifications comme lues
   static async markAllAsRead(req, res, next) {
     try {
-      const { userId } = req.user;
+      // Extraction userId - même approche que le contrôleur reviews
+      const { id: userId } = req.user;
+
+      if (!userId) {
+        throw new AppError('Impossible de déterminer l\'utilisateur connecté', 401);
+      }
 
       const result = await NotificationService.markAllAsRead(userId);
 

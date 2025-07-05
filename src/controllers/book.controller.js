@@ -482,6 +482,34 @@ class BookController {
       next(error);
     }
   }
+
+  // Obtenir les likes d'un livre et l'état de like de l'utilisateur
+  static async getBookLikes(req, res, next) {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
+
+      const result = await BookService.getBookLikes(id, userId);
+
+      res.json(formatResponse(true, 'Likes récupérés avec succès', result));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Toggle like/unlike d'un livre
+  static async toggleLike(req, res, next) {
+    try {
+      const { id } = req.params;
+      const userId = req.user.id;
+
+      const result = await BookService.toggleLike(id, userId);
+
+      res.json(formatResponse(true, result.action === 'liked' ? 'Livre liké' : 'Like retiré', result));
+    } catch (error) {
+      next(error);
+    }
+  }
 }
 
 module.exports = BookController;

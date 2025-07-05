@@ -1,191 +1,194 @@
--- Schéma complet de la base de données LECTURA
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Hôte : 127.0.0.1
+-- Généré le : sam. 05 juil. 2025 à 19:50
+-- Version du serveur : 10.4.32-MariaDB
+-- Version de PHP : 8.2.12
 
--- Table des utilisateurs
-CREATE TABLE IF NOT EXISTS lectura_db.users (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  first_name VARCHAR(50) NOT NULL,
-  last_name VARCHAR(50) NOT NULL,
-  email VARCHAR(100) UNIQUE NOT NULL,
-  password VARCHAR(255) NOT NULL,
-  phone VARCHAR(20),
-  role ENUM('admin', 'student', 'librarian') DEFAULT 'student',
-  student_id VARCHAR(20) UNIQUE,
-  department VARCHAR(100),
-  is_active BOOLEAN DEFAULT TRUE,
-  profile_image VARCHAR(255),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  
-  INDEX idx_email (email),
-  INDEX idx_student_id (student_id),
-  INDEX idx_role (role)
-);
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
 
--- Table des livres
-CREATE TABLE IF NOT EXISTS lectura_db.books (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  title VARCHAR(255) NOT NULL,
-  author VARCHAR(255) NOT NULL,
-  isbn VARCHAR(20) UNIQUE,
-  publisher VARCHAR(100),
-  publication_year YEAR,
-  category VARCHAR(50),
-  description TEXT,
-  total_copies INT DEFAULT 1,
-  available_copies INT DEFAULT 1,
-  status ENUM('available', 'borrowed', 'reserved', 'maintenance', 'lost') DEFAULT 'available',
-  cover_image VARCHAR(255),
-  language VARCHAR(10) DEFAULT 'fr',
-  pages INT,
-  location VARCHAR(50),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  
-  INDEX idx_title (title),
-  INDEX idx_author (author),
-  INDEX idx_isbn (isbn),
-  INDEX idx_category (category),
-  INDEX idx_status (status),
-  FULLTEXT idx_search (title, author, description)
-);
+--
+-- Base de données : `yori_db`
+--
+CREATE DATABASE IF NOT EXISTS `yori_db` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `yori_db`;
 
--- Table des emprunts
-CREATE TABLE IF NOT EXISTS lectura_db.loans (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  book_id INT NOT NULL,
-  loan_date DATE NOT NULL,
-  due_date DATE NOT NULL,
-  return_date DATE NULL,
-  status ENUM('active', 'returned', 'overdue', 'reserved') DEFAULT 'active',
-  renewals_count INT DEFAULT 0,
-  late_fee DECIMAL(10,2) DEFAULT 0.00,
-  notes TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
-  
-  INDEX idx_user_id (user_id),
-  INDEX idx_book_id (book_id),
-  INDEX idx_status (status),
-  INDEX idx_due_date (due_date)
-);
+-- --------------------------------------------------------
 
--- Table des avis/critiques
-CREATE TABLE IF NOT EXISTS reviews (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  book_id INT NOT NULL,
-  rating INT CHECK (rating >= 1 AND rating <= 5),
-  comment TEXT,
-  is_approved BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE,
-  
-  UNIQUE KEY unique_user_book_review (user_id, book_id),
-  INDEX idx_book_id (book_id),
-  INDEX idx_rating (rating),
-  INDEX idx_approved (is_approved)
-);
+--
+-- Structure de la table `users`
+--
+CREATE TABLE `users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `email` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `first_name` varchar(100) NOT NULL,
+  `last_name` varchar(100) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `student_id` varchar(20) DEFAULT NULL,
+  `department` varchar(100) DEFAULT NULL,
+  `role` enum('admin','librarian','student') DEFAULT 'student',
+  `is_active` tinyint(1) DEFAULT 1,
+  `profile_image` varchar(255) DEFAULT NULL,
+  `last_login` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`),
+  UNIQUE KEY `student_id` (`student_id`),
+  KEY `idx_email` (`email`),
+  KEY `idx_student_id` (`student_id`),
+  KEY `idx_role` (`role`),
+  KEY `idx_is_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Table des utilisateurs du système de bibliothèque';
 
--- Table des notifications
-CREATE TABLE IF NOT EXISTS notifications (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  type ENUM('loan_reminder', 'overdue_notice', 'reservation_ready', 'book_returned', 'account_created', 'password_reset') NOT NULL,
-  title VARCHAR(255) NOT NULL,
-  message TEXT NOT NULL,
-  is_read BOOLEAN DEFAULT FALSE,
-  is_sent BOOLEAN DEFAULT FALSE,
-  related_loan_id INT NULL,
-  related_book_id INT NULL,
-  scheduled_for TIMESTAMP NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  FOREIGN KEY (related_loan_id) REFERENCES loans(id) ON DELETE SET NULL,
-  FOREIGN KEY (related_book_id) REFERENCES books(id) ON DELETE SET NULL,
-  
-  INDEX idx_user_id (user_id),
-  INDEX idx_type (type),
-  INDEX idx_read (is_read),
-  INDEX idx_sent (is_sent),
-  INDEX idx_scheduled (scheduled_for)
-);
+-- --------------------------------------------------------
 
--- Table des sessions utilisateur
-CREATE TABLE IF NOT EXISTS lectura_db.user_sessions (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  refresh_token VARCHAR(500) NOT NULL,
-  expires_at TIMESTAMP NOT NULL,
-  ip_address VARCHAR(45),
-  user_agent TEXT,
-  is_active BOOLEAN DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  
-  INDEX idx_user_id (user_id),
-  INDEX idx_refresh_token (refresh_token),
-  INDEX idx_expires_at (expires_at),
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-);
+--
+-- Structure de la table `books`
+--
+CREATE TABLE `books` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `title` varchar(500) NOT NULL,
+  `author` varchar(300) NOT NULL,
+  `isbn` varchar(17) NOT NULL,
+  `publisher` varchar(200) DEFAULT NULL,
+  `publication_year` year(4) DEFAULT NULL,
+  `category` varchar(100) DEFAULT NULL,
+  `description` text DEFAULT NULL,
+  `language` varchar(10) DEFAULT 'fr',
+  `pages` int(11) DEFAULT NULL,
+  `location` varchar(100) DEFAULT NULL,
+  `cover_image` varchar(255) DEFAULT NULL,
+  `total_copies` int(11) DEFAULT 1,
+  `available_copies` int(11) DEFAULT 1,
+  `status` enum('available','borrowed','reserved','maintenance','lost','deleted') DEFAULT 'available',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `isbn` (`isbn`),
+  KEY `idx_isbn` (`isbn`),
+  KEY `idx_title` (`title`),
+  KEY `idx_author` (`author`),
+  KEY `idx_category` (`category`),
+  KEY `idx_status` (`status`),
+  KEY `idx_publication_year` (`publication_year`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Vues utiles
-CREATE OR REPLACE VIEW active_loans AS
-SELECT 
-  l.*,
-  u.first_name,
-  u.last_name,
-  u.email,
-  b.title,
-  b.author,
-  CASE 
-    WHEN l.due_date < CURDATE() THEN 'overdue'
-    WHEN l.due_date <= DATE_ADD(CURDATE(), INTERVAL 3 DAY) THEN 'due_soon'
-    ELSE 'active'
-  END as urgency
-FROM loans l
-JOIN users u ON l.user_id = u.id
-JOIN books b ON l.book_id = b.id
-WHERE l.status = 'active';
+-- --------------------------------------------------------
 
--- Procédures stockées utiles
-DELIMITER //
+--
+-- Structure de la table `loans`
+--
+CREATE TABLE `loans` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `book_id` int(11) NOT NULL,
+  `loan_date` date NOT NULL DEFAULT curdate(),
+  `due_date` date NOT NULL,
+  `return_date` date DEFAULT NULL,
+  `extension_count` int(11) DEFAULT 0,
+  `status` enum('pending','active','returned','overdue','extended') DEFAULT 'pending',
+  `notes` text DEFAULT NULL,
+  `fine_amount` decimal(10,2) DEFAULT 0.00,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_book_id` (`book_id`),
+  KEY `idx_loan_date` (`loan_date`),
+  KEY `idx_due_date` (`due_date`),
+  KEY `idx_status` (`status`),
+  KEY `idx_return_date` (`return_date`),
+  CONSTRAINT `loans_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `loans_ibfk_2` FOREIGN KEY (`book_id`) REFERENCES `books` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE PROCEDURE GetUserLoanHistory(IN userId INT)
-BEGIN
-  SELECT 
-    l.*,
-    b.title,
-    b.author,
-    b.isbn
-  FROM loans l
-  JOIN books b ON l.book_id = b.id
-  WHERE l.user_id = userId
-  ORDER BY l.created_at DESC;
-END //
+-- --------------------------------------------------------
 
-CREATE PROCEDURE GetOverdueLoans()
-BEGIN
-  SELECT 
-    l.*,
-    u.first_name,
-    u.last_name,
-    u.email,
-    b.title,
-    b.author,
-    DATEDIFF(CURDATE(), l.due_date) as days_overdue
-  FROM loans l
-  JOIN users u ON l.user_id = u.id
-  JOIN books b ON l.book_id = b.id
-  WHERE l.status = 'active' AND l.due_date < CURDATE()
-  ORDER BY days_overdue DESC;
-END //
+--
+-- Structure de la table `notifications`
+--
+CREATE TABLE `notifications` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `type` enum('loan_created','loan_validated','loan_refused','loan_reminder','loan_overdue','loan_returned','loan_renewed','book_available','new_book','book_reservation','account_created','system_update','welcome','password_changed','email_verified','profile_updated','maintenance','custom') NOT NULL DEFAULT 'system_update',
+  `title` varchar(255) NOT NULL,
+  `message` text NOT NULL,
+  `priority` varchar(20) DEFAULT NULL,
+  `related_entity_type` varchar(50) DEFAULT NULL,
+  `related_entity_id` int(11) DEFAULT NULL,
+  `metadata` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`metadata`)),
+  `is_read` tinyint(1) DEFAULT 0,
+  `is_sent` tinyint(1) DEFAULT 0,
+  `related_loan_id` int(11) DEFAULT NULL,
+  `related_book_id` int(11) DEFAULT NULL,
+  `scheduled_for` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `read_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_type` (`type`),
+  KEY `idx_is_read` (`is_read`),
+  KEY `idx_is_sent` (`is_sent`),
+  KEY `idx_scheduled_for` (`scheduled_for`),
+  KEY `idx_created_at` (`created_at`),
+  KEY `related_loan_id` (`related_loan_id`),
+  KEY `related_book_id` (`related_book_id`),
+  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `notifications_ibfk_2` FOREIGN KEY (`related_loan_id`) REFERENCES `loans` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `notifications_ibfk_3` FOREIGN KEY (`related_book_id`) REFERENCES `books` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Table des notifications envoyées aux utilisateurs';
 
-DELIMITER ;
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `reviews`
+--
+CREATE TABLE `reviews` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `book_id` int(11) NOT NULL,
+  `rating` int(11) NOT NULL,
+  `comment` text DEFAULT NULL,
+  `is_approved` tinyint(1) DEFAULT 0,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_user_book` (`user_id`,`book_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_book_id` (`book_id`),
+  KEY `idx_rating` (`rating`),
+  KEY `idx_is_approved` (`is_approved`),
+  CONSTRAINT `reviews_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `reviews_ibfk_2` FOREIGN KEY (`book_id`) REFERENCES `books` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `user_sessions`
+--
+CREATE TABLE `user_sessions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `refresh_token` varchar(500) NOT NULL,
+  `expires_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` text DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_refresh_token` (`refresh_token`),
+  KEY `idx_expires_at` (`expires_at`),
+  KEY `idx_is_active` (`is_active`),
+  CONSTRAINT `user_sessions_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Table des sessions utilisateur avec tokens de rafraîchissement';
+
+COMMIT;
