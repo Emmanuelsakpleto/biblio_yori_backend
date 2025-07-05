@@ -260,14 +260,14 @@ class EmailService {
         </head>
         <body>
             <div class="header">
-                <h1>📚 LECTURA</h1>
+                <h1>📚 YORI</h1>
                 <p>Votre bibliothèque numérique</p>
             </div>
             <div class="content">
                 ${content}
             </div>
             <div class="footer">
-                <p>© ${new Date().getFullYear()} LECTURA - Tous droits réservés</p>
+                <p>© ${new Date().getFullYear()} YORI - Tous droits réservés</p>
                 <p>Vous recevez cet email car vous êtes inscrit sur notre plateforme.</p>
             </div>
         </body>
@@ -281,33 +281,20 @@ class EmailService {
     getWelcomeTemplate(user) {
         const content = `
             <h2>Bienvenue ${user.first_name} !</h2>
-            <p>Nous sommes ravis de vous accueillir sur LECTURA, votre nouvelle bibliothèque numérique.</p>
-            
+            <p>C'est un plaisir de vous accueillir dans notre bibliothèque. Nous espérons que vous trouverez de belles lectures et que vous profiterez pleinement de nos services.</p>
             <div class="highlight">
-                <h3>🎉 Votre compte est maintenant actif !</h3>
+                <h3>Votre compte est maintenant actif.</h3>
                 <p><strong>Nom d'utilisateur :</strong> ${user.username}</p>
                 <p><strong>Email :</strong> ${user.email}</p>
             </div>
-            
-            <h3>Que pouvez-vous faire maintenant ?</h3>
-            <ul>
-                <li>📖 Parcourir notre catalogue de livres</li>
-                <li>📝 Emprunter jusqu'à 5 livres simultanément</li>
-                <li>⭐ Noter et commenter vos lectures</li>
-                <li>🔄 Renouveler vos emprunts</li>
-                <li>📊 Suivre votre historique de lecture</li>
-            </ul>
-            
+            <p>N'hésitez pas à explorer le catalogue, emprunter des livres, et partager vos avis avec la communauté.</p>
             <div style="text-align: center;">
                 <a href="${process.env.FRONTEND_URL}/dashboard" class="button">
-                    Accéder à mon compte
+                    Accéder à mon espace
                 </a>
             </div>
-            
-            <p>Si vous avez des questions, n'hésitez pas à nous contacter.</p>
-            <p>Bonne lecture !</p>
+            <p>Nous restons à votre écoute pour toute question.<br/>Bonne lecture et à bientôt !</p>
         `;
-        
         return this.getBaseTemplate('Bienvenue sur LECTURA', content);
     }
     
@@ -316,28 +303,21 @@ class EmailService {
      */
     getVerificationTemplate(user, verificationUrl) {
         const content = `
-            <h2>Vérifiez votre adresse email</h2>
+            <h2>Vérification de votre adresse email</h2>
             <p>Bonjour ${user.first_name},</p>
-            <p>Merci de vous être inscrit sur LECTURA ! Pour activer votre compte, veuillez vérifier votre adresse email en cliquant sur le bouton ci-dessous.</p>
-            
+            <p>Merci de rejoindre notre bibliothèque. Pour finaliser votre inscription, veuillez cliquer sur le bouton ci-dessous.</p>
             <div style="text-align: center;">
                 <a href="${verificationUrl}" class="button">
                     Vérifier mon email
                 </a>
             </div>
-            
             <p>Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :</p>
             <p style="word-break: break-all; background: #f1f1f1; padding: 10px; border-radius: 5px;">
                 ${verificationUrl}
             </p>
-            
-            <div class="warning">
-                <p><strong>⚠️ Important :</strong> Ce lien expire dans 24 heures.</p>
-            </div>
-            
-            <p>Si vous n'avez pas créé de compte sur LECTURA, vous pouvez ignorer cet email.</p>
+            <p>Ce lien est valable 24h. Si vous n'êtes pas à l'origine de cette inscription, ignorez simplement ce message.</p>
+            <p>Merci et à bientôt !</p>
         `;
-        
         return this.getBaseTemplate('Vérification de votre email', content);
     }
     
@@ -348,26 +328,19 @@ class EmailService {
         const content = `
             <h2>Réinitialisation de mot de passe</h2>
             <p>Bonjour ${user.first_name},</p>
-            <p>Vous avez demandé la réinitialisation de votre mot de passe sur LECTURA.</p>
-            
+            <p>Vous avez demandé à réinitialiser votre mot de passe. Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe.</p>
             <div style="text-align: center;">
                 <a href="${resetUrl}" class="button">
                     Réinitialiser mon mot de passe
                 </a>
             </div>
-            
             <p>Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :</p>
             <p style="word-break: break-all; background: #f1f1f1; padding: 10px; border-radius: 5px;">
                 ${resetUrl}
             </p>
-            
-            <div class="warning">
-                <p><strong>⚠️ Important :</strong> Ce lien expire dans 1 heure pour votre sécurité.</p>
-            </div>
-            
-            <p>Si vous n'avez pas demandé cette réinitialisation, veuillez ignorer cet email et votre mot de passe restera inchangé.</p>
+            <p>Ce lien est valable 1h. Si vous n'êtes pas à l'origine de cette demande, ignorez simplement ce message.</p>
+            <p>Cordialement,<br/>L'équipe de la bibliothèque</p>
         `;
-        
         return this.getBaseTemplate('Réinitialisation de mot de passe', content);
     }
     
@@ -378,33 +351,29 @@ class EmailService {
         const dueDate = new Date(loan.due_date).toLocaleDateString('fr-FR');
         
         const content = `
-            <h2>Emprunt confirmé !</h2>
+            <h2>Emprunt confirmé</h2>
             <p>Bonjour ${user.first_name},</p>
-            <p>Votre emprunt a été confirmé avec succès.</p>
-            
+            <p>Votre emprunt a bien été enregistré. Nous vous souhaitons une agréable lecture !</p>
             <div class="book-info">
                 <h3>📖 Détails du livre</h3>
                 <p><strong>Titre :</strong> ${book.title}</p>
                 <p><strong>Auteur :</strong> ${book.author}</p>
                 <p><strong>ISBN :</strong> ${book.isbn}</p>
             </div>
-            
             <div class="highlight">
                 <h3>📅 Informations d'emprunt</h3>
                 <p><strong>Date d'emprunt :</strong> ${new Date(loan.loan_date).toLocaleDateString('fr-FR')}</p>
                 <p><strong>Date de retour prévue :</strong> ${dueDate}</p>
                 <p><strong>Durée :</strong> ${loan.duration_days} jours</p>
             </div>
-            
-            <p>N'oubliez pas de retourner le livre avant la date d'échéance pour éviter les pénalités.</p>
-            
+            <p>Pensez à rendre le livre à temps pour en faire profiter d'autres lecteurs.</p>
             <div style="text-align: center;">
                 <a href="${process.env.FRONTEND_URL}/loans" class="button">
                     Voir mes emprunts
                 </a>
             </div>
+            <p>Merci de votre confiance.<br/>L'équipe de la bibliothèque</p>
         `;
-        
         return this.getBaseTemplate('Emprunt confirmé', content);
     }
     
@@ -415,35 +384,26 @@ class EmailService {
         const dueDate = new Date(loan.due_date).toLocaleDateString('fr-FR');
         
         const content = `
-            <h2>⏰ Rappel de retour de livre</h2>
+            <h2>⏰ Rappel de retour</h2>
             <p>Bonjour ${user.first_name},</p>
-            <p>Ce message vous rappelle que la date de retour de votre livre approche.</p>
-            
+            <p>La date de retour de votre livre approche. Merci de penser à le rapporter à temps.</p>
             <div class="book-info">
                 <h3>📖 Livre à retourner</h3>
                 <p><strong>Titre :</strong> ${book.title}</p>
                 <p><strong>Auteur :</strong> ${book.author}</p>
             </div>
-            
             <div class="warning">
                 <h3>⚠️ Date de retour</h3>
                 <p><strong>À retourner le :</strong> ${dueDate}</p>
                 <p><strong>Dans :</strong> ${daysUntilDue} jour(s)</p>
             </div>
-            
-            <p>Vous pouvez :</p>
-            <ul>
-                <li>Retourner le livre maintenant</li>
-                <li>Renouveler l'emprunt (si éligible)</li>
-            </ul>
-            
             <div style="text-align: center;">
                 <a href="${process.env.FRONTEND_URL}/loans/${loan.id}" class="button">
-                    Gérer cet emprunt
+                    Gérer mon emprunt
                 </a>
             </div>
+            <p>Merci de votre ponctualité !</p>
         `;
-        
         return this.getBaseTemplate('Rappel de retour', content);
     }
     
@@ -454,29 +414,24 @@ class EmailService {
         const content = `
             <h2>🚨 Livre en retard</h2>
             <p>Bonjour ${user.first_name},</p>
-            <p>Votre livre est maintenant en retard. Merci de le retourner dès que possible.</p>
-            
+            <p>Votre livre n'a pas encore été rendu. Merci de le rapporter dès que possible pour permettre à d'autres lecteurs d'en profiter.</p>
             <div class="book-info">
                 <h3>📖 Livre en retard</h3>
                 <p><strong>Titre :</strong> ${book.title}</p>
                 <p><strong>Auteur :</strong> ${book.author}</p>
             </div>
-            
             <div class="danger">
                 <h3>🚨 Informations de retard</h3>
                 <p><strong>Date d'échéance dépassée :</strong> ${new Date(loan.due_date).toLocaleDateString('fr-FR')}</p>
                 <p><strong>Nombre de jours de retard :</strong> ${daysOverdue} jour(s)</p>
             </div>
-            
-            <p>Des frais de retard peuvent s'appliquer. Veuillez retourner le livre au plus vite.</p>
-            
             <div style="text-align: center;">
                 <a href="${process.env.FRONTEND_URL}/loans/${loan.id}" class="button">
-                    Retourner maintenant
+                    Retourner le livre
                 </a>
             </div>
+            <p>Merci de votre compréhension et à bientôt !</p>
         `;
-        
         return this.getBaseTemplate('Livre en retard', content);
     }
     

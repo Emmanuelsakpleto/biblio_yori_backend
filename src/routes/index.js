@@ -6,6 +6,9 @@ const reviewRoutes = require('./review.routes');
 const notificationRoutes = require('./notification.routes');
 const adminRoutes = require('./admin.routes');
 
+const bookLikeRoutes = require('./bookLike.routes');
+const emailRoutes = require('./email.routes');
+
 const router = express.Router();
 
 // Middleware de log pour toutes les routes API
@@ -19,12 +22,17 @@ router.use('/auth', authRoutes);
 
 // Routes des livres
 router.use('/books', bookRoutes);
+// Routes des likes de livres
+router.use('/books', bookLikeRoutes);
 
 // Routes des emprunts
 router.use('/loans', loanRoutes);
 
 // Routes des avis
 router.use('/reviews', reviewRoutes);
+
+// Route email générique (pour envoi depuis le frontend)
+router.use('/email', emailRoutes);
 
 // Routes des notifications
 router.use('/notifications', notificationRoutes);
