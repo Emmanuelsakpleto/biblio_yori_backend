@@ -483,11 +483,11 @@ class BookController {
     }
   }
 
-  // Obtenir les likes d'un livre et l'état de like de l'utilisateur
+  // Obtenir les likes d'un livre
   static async getBookLikes(req, res, next) {
     try {
       const { id } = req.params;
-      const userId = req.user.id;
+      const userId = req.user?.id;
 
       const result = await BookService.getBookLikes(id, userId);
 
@@ -497,15 +497,21 @@ class BookController {
     }
   }
 
-  // Toggle like/unlike d'un livre
+  // Toggle like d'un livre
   static async toggleLike(req, res, next) {
     try {
       const { id } = req.params;
+      
+      // Vérifier que l'utilisateur est authentifié
+      if (!req.user || !req.user.id) {
+        return res.status(401).json(formatResponse(false, 'Utilisateur non authentifié', null));
+      }
+      
       const userId = req.user.id;
 
       const result = await BookService.toggleLike(id, userId);
 
-      res.json(formatResponse(true, result.action === 'liked' ? 'Livre liké' : 'Like retiré', result));
+      res.json(formatResponse(true, result.action === 'liked' ? 'Livre liké avec succès' : 'Like retiré avec succès', result));
     } catch (error) {
       next(error);
     }

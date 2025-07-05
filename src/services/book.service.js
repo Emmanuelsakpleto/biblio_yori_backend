@@ -1127,9 +1127,9 @@ class BookService {
         WHERE book_id = ? AND user_id = ?
       `;
       
-      const [existing] = await database.query(checkSql, [bookId, userId]);
+      const existing = await database.query(checkSql, [bookId, userId]);
 
-      if (existing.length > 0) {
+      if (existing && existing.length > 0) {
         // L'utilisateur a déjà liké, on retire le like
         const deleteSql = `
           DELETE FROM user_book_likes 
