@@ -278,6 +278,7 @@ class NotificationService {
   // Marquer une notification comme lue
   static async markAsRead(notificationId, userId) {
     try {
+      console.log('[markAsRead] Tentative de marquage comme lue', { notificationId, userId });
       const query = `
         UPDATE notifications 
         SET is_read = true, read_at = NOW(), updated_at = NOW()
@@ -285,8 +286,12 @@ class NotificationService {
       `;
 
       const result = await db.query(query, [notificationId, userId]);
-      
+      console.log('[markAsRead] Résultat update', { result });
+
       if (result.affectedRows === 0) {
+        // Vérification existence notification pour debug
+        const [notif] = await db.query('SELECT * FROM notifications WHERE id = ?', [notificationId]);
+        console.warn('[markAsRead] Notification non trouvée ou non autorisée', { notificationId, userId, notif });
         throw new AppError('Notification non trouvée', 404);
       }
 
@@ -295,11 +300,12 @@ class NotificationService {
         'SELECT * FROM notifications WHERE id = ? AND user_id = ?',
         [notificationId, userId]
       );
+      console.log('[markAsRead] Notification après update', { notification });
 
       return notification;
     } catch (error) {
       if (error instanceof AppError) throw error;
-      console.error('Erreur marquage notification:', error);
+      console.error('Erreur marquage notification:', error, { notificationId, userId });
       throw new AppError('Erreur lors du marquage de la notification', 500);
     }
   }
@@ -321,27 +327,7 @@ class NotificationService {
     }
   }
 
-  // Supprimer une notification
-  static async delete(notificationId, userId) {
-    try {
-      const query = `
-        DELETE FROM notifications 
-        WHERE id = ? AND user_id = ?
-      `;
-
-      const result = await db.query(query, [notificationId, userId]);
-      
-      if (result.affectedRows === 0) {
-        throw new AppError('Notification non trouvée', 404);
-      }
-
-      return { success: true };
-    } catch (error) {
-      if (error instanceof AppError) throw error;
-      console.error('Erreur suppression notification:', error);
-      throw new AppError('Erreur lors de la suppression de la notification', 500);
-    }
-  }
+  // Suppression de la méthode delete : la suppression de notification n'est plus disponible, seul le marquage comme lue est possible.
 
   // Supprimer les anciennes notifications
   static async deleteOldNotifications(daysOld = 30) {
@@ -507,47 +493,7 @@ class NotificationService {
     }
   }
 
-  // Créer une notification de livre
-  static async createBookNotification(bookData) {
-    try {
-      const { user_id, book_title, type, book_id } = bookData;
-
-      let title, message, notifType = type;
-      switch (type) {
-        case 'book_available':
-          title = 'Livre disponible';
-          message = `Le livre "${book_title}" que vous attendiez est maintenant disponible !`;
-          break;
-        case 'new_book':
-          title = 'Nouveau livre ajouté';
-          message = `Un nouveau livre a été ajouté à la bibliothèque : "${book_title}"`;
-          break;
-        case 'book_reservation':
-          title = 'Réservation confirmée';
-          message = `Votre réservation pour le livre "${book_title}" a été confirmée`;
-          break;
-        default:
-          notifType = 'book_update';
-          title = 'Notification de livre';
-          message = `Mise à jour concernant le livre "${book_title}"`;
-      }
-
-      return await this.create({
-        user_id,
-        type: notifType, // type explicite (ex: book_available, new_book...)
-        title,
-        message,
-        priority: type === 'book_available' ? 'high' : 'normal',
-        related_entity_type: 'book',
-        related_entity_id: book_id,
-        send_email: type === 'book_available',
-        metadata: { book_title }
-      });
-    } catch (error) {
-      console.error('Erreur notification livre:', error);
-      throw new AppError('Erreur lors de la création de la notification de livre', 500);
-    }
-  }
+  // ...ancienne version supprimée, seule la version centralisée est conservée...
 
   // Créer une notification système
   static async createSystemNotification(userData) {

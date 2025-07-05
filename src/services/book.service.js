@@ -3,6 +3,7 @@ const { logger, generateSlug } = require('../utils/helpers');
 const { BOOK_STATUS, PAGINATION } = require('../utils/constants');
 const fs = require('fs').promises;
 const path = require('path');
+const NotificationService = require('./notification.service');
 
 class BookService {
   /**
@@ -862,7 +863,18 @@ class BookService {
       
       const createdBook = books[0];
       console.log('✅ Livre créé avec succès:', createdBook);
-      
+
+      // Récupérer dynamiquement la liste des admins actifs
+      const [admins] = await database.query("SELECT id FROM users WHERE role = 'admin' AND is_active = true");
+      const adminIds = admins.map(a => a.id);
+      // Notifier les admins de l'ajout d'un nouveau livre
+      await NotificationService.createBookNotification({
+        admin_id: adminIds,
+        type: 'new_book',
+        book_title: createdBook.title,
+        book_id: createdBook.id
+      });
+
       return createdBook;
       
     } catch (error) {
@@ -955,6 +967,9 @@ class BookService {
       const updatedBook = books[0];
       console.log('✅ Livre mis à jour avec succès:', updatedBook);
       
+      // Créer une notification pour la mise à jour du livre
+      await NotificationService.createBookNotification(updatedBook.id, 'updated');
+      
       return updatedBook;
       
     } catch (error) {
@@ -1002,8 +1017,22 @@ class BookService {
       await connection.query(deleteQuery, ['deleted', id]);
       
       await connection.end();
-      
+
+      // Récupérer dynamiquement la liste des admins actifs
+      const [admins2] = await database.query("SELECT id FROM users WHERE role = 'admin' AND is_active = true");
+      const adminIds2 = admins2.map(a => a.id);
+      // Notifier les admins de la suppression d'un livre
+      await NotificationService.createBookNotification({
+        admin_id: adminIds2,
+        type: 'book_deleted',
+        book_title: existing[0].title,
+        book_id: id
+      });
+
       console.log('✅ Livre supprimé avec succès');
+      
+      // Créer une notification pour la suppression du livre
+      await NotificationService.createBookNotification(id, 'deleted');
       
       return { message: 'Livre supprimé avec succès' };
       
