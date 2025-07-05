@@ -1,35 +1,33 @@
-# Dockerfile pour LECTURA Backend
-FROM node:18-alpine
+# Dockerfile pour YORI Backend
+FROM node:20-alpine3.19
 
-# Créer le répertoire de travail
-WORKDIR /app
-
-# Copier les fichiers de dépendances
-COPY package*.json ./
-
-# Installer les dépendances
-RUN npm ci --only=production
+# Mettre à jour les packages système et installer curl
+RUN apk update && apk upgrade && \
+    apk add --no-cache curl && \
+    rm -rf /var/cache/apk/*
 
 # Créer un utilisateur non-root pour la sécurité
-RUN addgroup -g 1001 -S lectura && \
-    adduser -S lectura -u 1001
+RUN addgroup -g 1001 -S yori && \
+    adduser -S yori -u 1001
+
+# Créer le répertoire de travail avec les bonnes permissions
+WORKDIR /app
+RUN chown yori:yori /app
+
+# Changer vers l'utilisateur non-root avant les opérations
+USER yori
+
+# Copier les fichiers de dépendances
+COPY --chown=yori:yori package*.json ./
+
+# Installer les dépendances
+RUN npm ci --only=production && npm cache clean --force
 
 # Copier le code source
-COPY --chown=lectura:lectura . .
+COPY --chown=yori:yori . .
 
-# Créer les répertoires nécessaires
-RUN mkdir -p uploads/books uploads/users uploads/backups logs && \
-    chown -R lectura:lectura uploads logs
-
-# Exposer le port
-EXPOSE 5000
-
-# Passer à l'utilisateur non-root
-USER lectura
-
-# Définir les variables d'environnement par défaut
-ENV NODE_ENV=production
-ENV PORT=5000
+# Exposer le port (ajustez selon votre application)
+EXPOSE 3000
 
 # Commande de démarrage
-CMD ["node", "src/server.js"]
+CMD ["npm", "start"]

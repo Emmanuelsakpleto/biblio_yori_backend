@@ -11,13 +11,17 @@ yarn-error.log*
 .env.test
 .env.production
 
-# Logs
+# Logs (seront montés en volumes)
 logs/
 *.log
 
-# Coverage
+# Coverage et tests
 coverage/
 nyc_output/
+src/__tests__/
+*.test.js
+*.spec.js
+test-*.js
 
 # Runtime data
 pids/
@@ -28,26 +32,43 @@ pids/
 # Uploads (seront montés en volumes)
 uploads/
 
-# Tests
-src/__tests__/
-*.test.js
-*.spec.js
+# Scripts de développement et nettoyage
+cleanup-for-prof.js
+api-tests*.http
+check-stats.js
 
 # Documentation
 docs/
 README.md
+README_PROF.md
 PROJECT_COMPLETION.md
+CRUD_BOOKS_IMPLEMENTATION.md
 
 # Git
 .git/
 .gitignore
 
-# IDE
+# IDE et éditeurs
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+.DS_Store
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Fichiers temporaires
+temp/
+tmp/
+*.tmp
+
+# Base de données (pour éviter les conflits)
+database/
+*.sql
 
 # OS
 .DS_Store

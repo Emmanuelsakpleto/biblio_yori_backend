@@ -1,34 +1,35 @@
-# Docker Compose configuration
+# Docker Compose configuration pour YORI
 version: '3.8'
 
 services:
   # Base de données MySQL
   mysql:
     image: mysql:8.0
-    container_name: lectura-mysql
+    container_name: yori-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: lectura_db
-      MYSQL_USER: lectura_user
-      MYSQL_PASSWORD: lectura_password
+      MYSQL_ROOT_PASSWORD: yori_root_password
+      MYSQL_DATABASE: yori_db
+      MYSQL_USER: yori_user
+      MYSQL_PASSWORD: yori_password
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
-      - ./database/seeds:/docker-entrypoint-initdb.d/seeds
+      - ./database/yori_complete.sql:/docker-entrypoint-initdb.d/01-init.sql
     networks:
-      - lectura-network
+      - yori-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pyori_root_password"]
       timeout: 20s
       retries: 10
+      interval: 10s
+      start_period: 30s
 
-  # Application backend
-  lectura-backend:
+  # Application backend YORI
+  yori-backend:
     build: .
-    container_name: lectura-backend
+    container_name: yori-backend
     restart: unless-stopped
     depends_on:
       mysql:
@@ -38,46 +39,34 @@ services:
       PORT: 5000
       DB_HOST: mysql
       DB_PORT: 3306
-      DB_NAME: lectura_db
-      DB_USER: lectura_user
-      DB_PASSWORD: lectura_password
-      JWT_SECRET: your-super-secret-jwt-key-change-in-production
-      JWT_REFRESH_SECRET: your-super-secret-refresh-key-change-in-production
-      EMAIL_HOST: smtp.gmail.com
-      EMAIL_PORT: 587
-      EMAIL_USER: your-email@gmail.com
-      EMAIL_PASS: your-app-password
+      DB_NAME: yori_db
+      DB_USER: yori_user
+      DB_PASSWORD: yori_password
+      JWT_SECRET: yori-super-secret-jwt-key-change-in-production-2025
+      JWT_REFRESH_SECRET: yori-super-secret-refresh-key-change-in-production-2025
+      JWT_EXPIRES_IN: 7d
       FRONTEND_URL: http://localhost:3000
+      UPLOAD_PATH: uploads
+      MAX_FILE_SIZE: 5242880
+      LOG_LEVEL: info
     ports:
       - "5000:5000"
     volumes:
       - ./uploads:/app/uploads
       - ./logs:/app/logs
     networks:
-      - lectura-network
+      - yori-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-
-  # Redis pour le cache (optionnel)
-  redis:
-    image: redis:7-alpine
-    container_name: lectura-redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - lectura-network
-    command: redis-server --appendonly yes
+      start_period: 40s
 
 volumes:
   mysql_data:
-  redis_data:
+    driver: local
 
 networks:
-  lectura-network:
+  yori-network:
     driver: bridge
