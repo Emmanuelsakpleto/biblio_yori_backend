@@ -10,6 +10,8 @@ const CleanupJobs = require('../src/jobs/cleanup.jobs');
 const NotificationJobs = require('../src/jobs/notification.jobs');
 const StatisticsJobs = require('../src/jobs/statistics.jobs');
 
+const ReviewService = require('../src/services/review.service');
+
 // Couleurs pour les logs
 const colors = {
   reset: '\x1b[0m',
@@ -37,6 +39,11 @@ function showHelp() {
   console.log('  stats [type] [dates]  - Générer des statistiques');
   console.log('  status               - Afficher l\'état du système');
   console.log('  help                 - Afficher cette aide\n');
+
+  colorLog('yellow', 'Commandes avancées:');
+  console.log('  review-reports [action] [reportId] [adminNotes] - Traiter un signalement d\'avis (admin)');
+  console.log('  notify-admin-review [reviewId]                  - Notifier l\'admin d\'un nouvel avis');
+  console.log();
   
   colorLog('yellow', 'Options de nettoyage:');
   console.log('  --notifications      - Nettoyer les anciennes notifications');
@@ -217,6 +224,50 @@ async function generateStats(args) {
   }
 }
 
+// Traiter un signalement d'avis (admin)
+async function processReviewReport(args) {
+  try {
+    const action = args[1];
+    const reportId = args[2];
+    const adminNotes = args[3] || '';
+    if (!['dismiss', 'warning', 'remove_review', 'suspend_user'].includes(action)) {
+      colorLog('red', '❌ Action invalide. Actions possibles: dismiss, warning, remove_review, suspend_user');
+      return;
+    }
+    if (!reportId) {
+      colorLog('red', '❌ reportId requis.');
+      return;
+    }
+    colorLog('blue', `📝 Traitement du signalement ${reportId} avec action ${action}...`);
+    const result = await ReviewService.processReport(reportId, action, adminNotes);
+    colorLog('green', '✅ Signalement traité avec succès');
+    console.log(result);
+  } catch (error) {
+    colorLog('red', `❌ Erreur: ${error.message}`);
+  }
+}
+
+// Notifier l'admin lors d'un nouvel avis
+async function notifyAdminReview(args) {
+  try {
+    const reviewId = args[1];
+    if (!reviewId) {
+      colorLog('red', '❌ reviewId requis.');
+      return;
+    }
+    colorLog('blue', `📢 Notification admin pour nouvel avis: ${reviewId}...`);
+    if (typeof NotificationJobs.sendAdminReviewNotification !== 'function') {
+      colorLog('red', '❌ Fonction sendAdminReviewNotification non implémentée dans NotificationJobs.');
+      return;
+    }
+    const result = await NotificationJobs.sendAdminReviewNotification(reviewId);
+    colorLog('green', '✅ Notification admin envoyée');
+    console.log(result);
+  } catch (error) {
+    colorLog('red', `❌ Erreur: ${error.message}`);
+  }
+}
+
 function showStatus() {
   colorLog('blue', '📋 État du système LECTURA\n');
   
@@ -263,6 +314,14 @@ async function main() {
         
       case 'status':
         showStatus();
+        break;
+
+      case 'review-reports':
+        await processReviewReport(args);
+        break;
+
+      case 'notify-admin-review':
+        await notifyAdminReview(args);
         break;
         
       default:

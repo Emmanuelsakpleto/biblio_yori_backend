@@ -16,6 +16,17 @@ class ReviewController {
         is_anonymous
       });
 
+      // Notifier l'admin automatiquement lors de la création d'un avis
+      try {
+        const NotificationJobs = require('../jobs/notification.jobs');
+        if (typeof NotificationJobs.sendAdminReviewNotification === 'function') {
+          await NotificationJobs.sendAdminReviewNotification(review.id);
+        }
+      } catch (notifError) {
+        // Log mais ne bloque pas la création de l'avis
+        console.error('Erreur notification admin nouvel avis:', notifError);
+      }
+
       res.status(201).json(formatResponse(true, 'Critique créée avec succès', review));
     } catch (error) {
       next(error);
@@ -46,7 +57,7 @@ class ReviewController {
       const pagination = paginate(parseInt(page), parseInt(limit));
       const result = await ReviewService.getAllReviews(filters, pagination);
 
-      res.json(formatResponse(true, 'Critiques récupérées avec succès', result));
+      res.json(formatResponse(true, 'Critiques récupérées avec succès', Array.isArray(result.reviews) ? result.reviews : []));
     } catch (error) {
       next(error);
     }

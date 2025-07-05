@@ -6,6 +6,60 @@ const EmailService = require('../services/email.service');
 const db = require('../config/database');
 
 class NotificationJobs {
+  /**
+   * Notifier l'admin lors de la création d'un nouvel avis
+   * @param {string|number} reviewId
+   */
+  static async sendAdminReviewNotification(reviewId) {
+    const ReviewService = require('../services/review.service');
+    try {
+      // Récupérer l'avis
+      const review = await ReviewService.getReviewById(reviewId);
+      if (!review) throw new Error('Avis non trouvé');
+
+      // Récupérer les admins
+      const admins = await db.query(
+        "SELECT id, email, first_name, last_name FROM users WHERE role = 'admin' AND status = 'active'"
+      );
+      if (!admins.length) throw new Error('Aucun admin trouvé');
+
+      const notifResults = [];
+      for (const admin of admins) {
+        // Créer notification
+        const notification = await NotificationService.create({
+          user_id: admin.id,
+          type: 'review_new',
+          title: 'Nouvel avis à modérer',
+          message: `Un nouvel avis a été posté sur le livre "${review.book_title}" par ${review.reviewer_name}.`,
+          metadata: {
+            review_id: review.id,
+            book_id: review.book_id,
+            user_id: review.user_id,
+            rating: review.rating
+          }
+        });
+
+        // Envoyer email (optionnel)
+        if (typeof EmailService.sendAdminReviewNotification === 'function') {
+          await EmailService.sendAdminReviewNotification({
+            email: admin.email,
+            name: `${admin.first_name} ${admin.last_name}`,
+            review
+          });
+        }
+
+        notifResults.push({
+          admin_id: admin.id,
+          notification_id: notification.id,
+          email: admin.email
+        });
+      }
+      return notifResults;
+    } catch (error) {
+      logger.error('❌ Erreur notification admin nouvel avis:', error);
+      throw error;
+    }
+  }
   // Vérifier les emprunts qui arrivent à échéance (tous les jours à 9h)
   static scheduleDueDateReminders() {
     cron.schedule('0 9 * * *', async () => {

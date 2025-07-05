@@ -163,7 +163,7 @@ class LoanService {
                     user_id, book_id, loan_date, due_date, status, 
                     notes, created_at, updated_at
                 )
-                VALUES (?, ?, ?, ?, 'active', ?, NOW(), NOW())
+                VALUES (?, ?, ?, ?, 'pending', ?, NOW(), NOW())
             `, [user_id, book_id, loanDate, dueDateStr, notes || null]);
             
             // Décrémenter le nombre de copies disponibles

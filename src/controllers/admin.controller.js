@@ -1,4 +1,4 @@
-const UserService = require('../services/auth.service');
+const UserService = require('../services/user.service');
 const BookService = require('../services/book.service');
 const LoanService = require('../services/loan.service');
 const StatisticsService = require('../services/statistics.service');
@@ -26,7 +26,7 @@ class AdminController {
         search = '',
         role = '',
         status = '',
-        sort_by = 'registration_date',
+        sort_by = 'created_at', // Correction ici
         sort_order = 'DESC'
       } = req.query;
 
