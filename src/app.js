@@ -64,7 +64,7 @@ app.use(compression());
 // Configuration du rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // limite de requêtes par IP
+  max: process.env.NODE_ENV === 'production' ? 200 : 2000, // limite de requêtes par IP (augmentée)
   message: {
     error: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.'
   },
@@ -84,8 +84,21 @@ const authLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
+// Rate limiting plus permissif pour les likes
+const likesLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: process.env.NODE_ENV === 'production' ? 30 : 100, // 30 likes par minute en production, 100 en dev
+  message: {
+    error: 'Trop de likes envoyés, veuillez patienter un moment.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
+app.use('/api/books/:id/like', likesLimiter);
+app.use('/api/books/:id/likes', likesLimiter);
 
 // Parsing des données
 app.use(express.json({ limit: '10mb' }));
