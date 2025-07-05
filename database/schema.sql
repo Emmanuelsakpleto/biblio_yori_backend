@@ -172,6 +172,24 @@ CREATE TABLE `reviews` (
 -- --------------------------------------------------------
 
 --
+-- Structure de la table `user_book_likes`
+--
+CREATE TABLE `user_book_likes` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `book_id` int(11) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_user_book` (`user_id`,`book_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_book_id` (`book_id`),
+  CONSTRAINT `user_book_likes_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `user_book_likes_ibfk_2` FOREIGN KEY (`book_id`) REFERENCES `books` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Likes individuels par utilisateur et livre';
+
+-- --------------------------------------------------------
+
+--
 -- Structure de la table `user_sessions`
 --
 CREATE TABLE `user_sessions` (

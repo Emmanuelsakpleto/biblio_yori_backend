@@ -1,4 +1,19 @@
--- ===================================
+-- =====-- Insérer des avis réalistes pour les livres empruntés/rendus
+INSERT INTO reviews (user_id, book_id, rating, comment, is_approved, created_at, updated_at) VALUES
+-- Jean Dupont (user_id: 5) sur "Clean Code"
+(5, 11, 5, 'Un incontournable pour tout développeur. Clair, structuré, et motivant.', TRUE, '2025-07-01', '2025-07-01'),
+-- Jean Dupont (user_id: 5) sur "JavaScript: The Definitive Guide"
+(5, 13, 4, 'Très complet, mais parfois un peu dense pour les débutants.', TRUE, '2025-07-02', '2025-07-02'),
+-- Pierre Durand (user_id: 7) sur "L''Étranger"
+(7, 45, 5, 'Un chef-d'œuvre de la littérature française. Lecture marquante.', TRUE, '2025-07-03', '2025-07-03'),
+-- Test User (user_id: 8) sur "Algorithms"
+(8, 15, 4, 'Bon livre pour comprendre les bases, mais nécessite quelques prérequis.', TRUE, '2025-07-04', '2025-07-04'),
+-- Jean Dupont (user_id: 5) sur "Les Misérables"
+(5, 44, 5, 'Roman passionnant, très bien écrit. Je recommande vivement.', TRUE, '2025-07-04', '2025-07-04'),
+-- Marie Martin (user_id: 6) sur "Python Crash Course"
+(6, 14, 4, 'Parfait pour débuter en Python. Exemples clairs et progressifs.', TRUE, '2025-07-05', '2025-07-05'),
+-- Étudiant Principal (user_id: 4) sur "Calculus: Early Transcendentals"
+(4, 26, 4, 'Manuel de référence solide, avec de nombreux exercices pratiques.', TRUE, '2025-07-05', '2025-07-05');==================
 -- SEEDER 004: Avis (reviews) sur les livres
 -- Date: 2025-07-05
 -- ===================================

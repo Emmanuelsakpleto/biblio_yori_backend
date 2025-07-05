@@ -13,6 +13,7 @@ INSERT INTO users (
     first_name, 
     last_name, 
     phone, 
+    student_id,
     department, 
     role, 
     is_active
@@ -24,6 +25,7 @@ INSERT INTO users (
     'Admin',
     'Principal',
     '+33123456789',
+    NULL,
     'Administration',
     'admin',
     TRUE
@@ -36,6 +38,7 @@ INSERT INTO users (
     'Sophie',
     'Bibliothèque',
     '+33123456790',
+    NULL,
     'Bibliothèque',
     'librarian',
     TRUE
@@ -48,6 +51,7 @@ INSERT INTO users (
     'Sophie',
     'Martin',
     '+33123456795',
+    NULL,
     'Bibliothèque Centrale',
     'librarian',
     TRUE
@@ -60,6 +64,7 @@ INSERT INTO users (
     'Étudiant',
     'Principal',
     '+33123456791',
+    'STU001',
     'Informatique',
     'student',
     TRUE
@@ -71,6 +76,7 @@ INSERT INTO users (
     'Jean',
     'Dupont',
     '+33123456792',
+    'STU002',
     'Informatique',
     'student',
     TRUE
@@ -82,6 +88,7 @@ INSERT INTO users (
     'Marie',
     'Martin',
     '+33123456793',
+    'STU003',
     'Mathématiques',
     'student',
     TRUE
@@ -93,6 +100,7 @@ INSERT INTO users (
     'Pierre',
     'Durand',
     '+33123456794',
+    'STU004',
     'Physique',
     'student',
     TRUE
@@ -104,6 +112,7 @@ INSERT INTO users (
     'Test',
     'User',
     '+33123456796',
+    'STU005',
     'Test',
     'student',
     TRUE
