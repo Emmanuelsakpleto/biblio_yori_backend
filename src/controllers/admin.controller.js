@@ -26,16 +26,16 @@ class AdminController {
         search = '',
         role = '',
         status = '',
-        sort_by = 'created_at', // Correction ici
+        sort_by = 'created_at',
         sort_order = 'DESC'
       } = req.query;
 
       const filters = {
-        search: search.trim(),
-        role: role.trim(),
-        status: status.trim(),
+        search: search ? search.trim() : '',
+        role: role ? role.trim() : '',
+        status: status ? status.trim() : '',
         sort_by,
-        sort_order: sort_order.toUpperCase()
+        sort_order: sort_order ? sort_order.toUpperCase() : 'DESC'
       };
 
       const pagination = paginate(parseInt(page), parseInt(limit));
@@ -516,6 +516,137 @@ class AdminController {
       const report = await StatisticsService.getMonthlyReport(parseInt(year), parseInt(month));
 
       res.json(formatResponse(true, 'Rapport mensuel généré', report));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Maintenance du système
+  static async performMaintenance(req, res, next) {
+    try {
+      const {
+        tasks = ['cleanup_sessions', 'optimize_database', 'update_statistics']
+      } = req.body;
+
+      const results = await UserService.performMaintenance(tasks);
+
+      res.json(formatResponse(true, 'Maintenance effectuée', results));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Créer un nouvel utilisateur (Admin seulement)
+  static async createUser(req, res, next) {
+    try {
+      const userData = req.body;
+      
+      // Hash du mot de passe si fourni
+      if (userData.password) {
+        const bcrypt = require('bcrypt');
+        userData.password = await bcrypt.hash(userData.password, 10);
+      }
+      
+      const user = await UserService.createUser(userData);
+
+      // Créer une notification de bienvenue pour le nouvel utilisateur
+      await NotificationService.createSystemNotification({
+        user_id: user.id,
+        type: 'welcome',
+        customTitle: 'Bienvenue !',
+        customMessage: 'Votre compte a été créé par un administrateur. Bienvenue dans la bibliothèque YORI !'
+      });
+
+      res.status(201).json(formatResponse(true, 'Utilisateur créé avec succès', user));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Rechercher des utilisateurs
+  static async searchUsers(req, res, next) {
+    try {
+      const { q: searchTerm, limit = 10 } = req.query;
+      
+      if (!searchTerm || searchTerm.trim().length < 2) {
+        throw new AppError('Le terme de recherche doit contenir au moins 2 caractères', 400);
+      }
+      
+      const users = await UserService.searchUsers(searchTerm.trim(), parseInt(limit));
+      
+      res.json(formatResponse(true, 'Recherche effectuée', users));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Obtenir les statistiques d'un utilisateur
+  static async getUserStats(req, res, next) {
+    try {
+      const { id } = req.params;
+      
+      const user = await UserService.getUserById(id);
+      if (!user) {
+        throw new AppError('Utilisateur non trouvé', 404);
+      }
+      
+      const stats = await UserService.getUserStats(id);
+      
+      res.json(formatResponse(true, 'Statistiques utilisateur récupérées', stats));
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Export des données utilisateurs (CSV/Excel)
+  static async exportUsers(req, res, next) {
+    try {
+      const { format = 'csv', filters = {} } = req.query;
+      
+      // Récupérer tous les utilisateurs avec les filtres
+      const result = await UserService.getAllUsers(filters, { page: 1, limit: 10000 });
+      
+      if (format === 'csv') {
+        const csv = UserService.exportToCSV(result.users);
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', 'attachment; filename=users.csv');
+        res.send(csv);
+      } else {
+        res.json(formatResponse(true, 'Données utilisateurs exportées', result.users));
+      }
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  // Réinitialiser le mot de passe d'un utilisateur
+  static async resetUserPassword(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { new_password, send_notification = true } = req.body;
+      
+      const user = await UserService.getUserById(id);
+      if (!user) {
+        throw new AppError('Utilisateur non trouvé', 404);
+      }
+      
+      // Hash du nouveau mot de passe
+      const bcrypt = require('bcrypt');
+      const hashedPassword = await bcrypt.hash(new_password, 10);
+      
+      await UserService.updateUserProfile(id, { password: hashedPassword });
+      
+      // Envoyer une notification si demandé
+      if (send_notification) {
+        await NotificationService.createSystemNotification({
+          user_id: id,
+          type: 'password_changed',
+          customTitle: 'Mot de passe réinitialisé',
+          customMessage: 'Votre mot de passe a été réinitialisé par un administrateur. Pensez à le changer lors de votre prochaine connexion.'
+        });
+      }
+      
+      res.json(formatResponse(true, 'Mot de passe réinitialisé avec succès'));
     } catch (error) {
       next(error);
     }

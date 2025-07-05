@@ -1,7 +1,15 @@
 const express = require('express');
 const AdminController = require('../controllers/admin.controller');
 const { authenticate, requireAdmin } = require('../middleware/auth.middleware');
-const { validate } = require('../middleware/validation.middleware');
+const { validate } = require('../middleware/express-validator.middleware');
+const { 
+  createUserSchema, 
+  updateUserSchema, 
+  userStatusSchema, 
+  resetPasswordSchema, 
+  searchUsersSchema,
+  getUsersSchema
+} = require('../validators/user.validators');
 const multer = require('multer');
 const path = require('path');
 
@@ -27,10 +35,15 @@ router.get('/activities/recent', AdminController.getRecentActivities);
 router.get('/reports/monthly', AdminController.getMonthlyReport);
 
 // Gestion des utilisateurs
-router.get('/users', AdminController.getAllUsers);
+router.get('/users', validate(getUsersSchema, 'query'), AdminController.getAllUsers);
+router.post('/users', validate(createUserSchema), AdminController.createUser);
+router.get('/users/search', validate(searchUsersSchema, 'query'), AdminController.searchUsers);
+router.get('/users/export', AdminController.exportUsers);
 router.get('/users/:id', AdminController.getUserById);
-router.put('/users/:id', AdminController.updateUser);
-router.patch('/users/:id/status', AdminController.toggleUserStatus);
+router.get('/users/:id/stats', AdminController.getUserStats);
+router.put('/users/:id', validate(updateUserSchema), AdminController.updateUser);
+router.patch('/users/:id/status', validate(userStatusSchema), AdminController.toggleUserStatus);
+router.patch('/users/:id/password', validate(resetPasswordSchema), AdminController.resetUserPassword);
 router.delete('/users/:id', AdminController.deleteUser);
 router.patch('/users/:id/promote', AdminController.promoteToAdmin);
 router.patch('/users/:id/demote', AdminController.demoteFromAdmin);
