@@ -97,19 +97,23 @@ class LoanController {
       });
       // Créer une notification (opération secondaire - ne doit pas faire planter le processus)
       try {
+        // Notifier l'étudiant ET tous les admins (demande d'emprunt)
+        const admins = await db.query(`SELECT id FROM users WHERE role = 'admin' AND is_active = true`);
+        const adminIds = admins.map(a => a.id);
         await NotificationService.createLoanNotification({
           user_id: userId,
+          admin_id: adminIds,
           book_title: loan.book_title || loan.title,
           loan_date: loan.loan_date,
           due_date: loan.due_date,
           loan_id: loan.id,
-          type: 'loan_created'
+          type: 'loan_requested'
         });
-        // Notifier l'admin par email (demande d'emprunt)
-        const admin = await LoanService.getAdminForNotification(); // à adapter selon votre logique
+        // Notifier l'admin principal par email (demande d'emprunt)
+        const admin = admins[0];
         const user = req.user;
         const book = loan.book || { title: loan.book_title, author: loan.book_author };
-        await EmailService.sendLoanRequestAdminNotification(admin, user, book, loan);
+        if (admin) await EmailService.sendLoanRequestAdminNotification(admin, user, book, loan);
       } catch (notificationError) {
         console.warn('Erreur lors de la notification d\'emprunt:', notificationError.message);
       }
@@ -271,9 +275,13 @@ class LoanController {
       });
       // Créer une notification (opération secondaire - ne doit pas faire planter le processus)
       try {
+        // Notifier l'étudiant ET tous les admins (retour)
+        const admins = await db.query(`SELECT id FROM users WHERE role = 'admin' AND is_active = true`);
+        const adminIds = admins.map(a => a.id);
         await NotificationService.createLoanNotification({
           user_id: loan.user_id,
-          book_title: loan.title || existingLoan.title, // Utiliser le titre du livre
+          admin_id: adminIds,
+          book_title: loan.title || existingLoan.title,
           loan_id: loan.id,
           type: 'loan_returned'
         });
@@ -281,9 +289,9 @@ class LoanController {
         const user = loan.user || req.user;
         const book = loan.book || { title: loan.title, author: loan.book_author };
         await EmailService.sendReturnNotification(user, book, loan);
-        // Email info retour à l'admin
-        const admin = await LoanService.getAdminForNotification();
-        await EmailService.sendReturnAdminNotification(admin, user, book, loan);
+        // Email info retour à l'admin principal
+        const admin = admins[0];
+        if (admin) await EmailService.sendReturnAdminNotification(admin, user, book, loan);
       } catch (notificationError) {
         console.warn('Erreur lors de la notification de retour:', notificationError.message);
       }
@@ -309,8 +317,12 @@ class LoanController {
       }
       const loan = await LoanService.renewLoan(id, userId, extensionDays, true); // true = isAdmin
       try {
+        // Notifier l'étudiant ET tous les admins (renouvellement)
+        const admins = await db.query(`SELECT id FROM users WHERE role = 'admin' AND is_active = true`);
+        const adminIds = admins.map(a => a.id);
         await NotificationService.createLoanNotification({
           user_id: loan.user_id,
+          admin_id: adminIds,
           book_title: loan.title || loan.book_title || existingLoan.title,
           loan_date: loan.loan_date,
           due_date: loan.due_date,
@@ -363,8 +375,11 @@ class LoanController {
         penalty_amount,
         notes
       });
+      const admins = await db.query(`SELECT id FROM users WHERE role = 'admin' AND is_active = true`);
+      const adminIds = admins.map(a => a.id);
       await NotificationService.createLoanNotification({
         user_id: loan.user_id,
+        admin_id: adminIds,
         book_title: loan.book_title,
         due_date: loan.due_date,
         loan_id: loan.id,

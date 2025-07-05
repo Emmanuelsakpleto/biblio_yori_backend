@@ -5,7 +5,13 @@ class NotificationController {
   // Obtenir les notifications de l'utilisateur connecté
   static async getMyNotifications(req, res, next) {
     try {
-      const { userId } = req.user;
+      // DEBUG: Afficher l'objet user reçu
+      console.log('user reçu dans notifications:', req.user);
+      // Correction extraction userId (accepte id ou userId)
+      const userId = req.user.id || req.user.userId;
+      if (!userId) {
+        throw new AppError('Impossible de déterminer l\'utilisateur connecté', 401);
+      }
       const {
         page = 1,
         limit = 20,

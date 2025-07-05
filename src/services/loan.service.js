@@ -93,6 +93,7 @@ class LoanService {
                 type: 'loan_validated',
                 title: `Réservation validée : ${loan.book_title}`,
                 message: `Votre réservation pour le livre "${loan.book_title}" a été validée. Vous pouvez venir le récupérer.`,
+                priority: 'normal',
                 related_entity_type: 'loan',
                 related_entity_id: loanId
             });
@@ -104,6 +105,7 @@ class LoanService {
                     type: 'loan_validated_admin',
                     title: `Emprunt validé pour ${loan.first_name} ${loan.last_name}`,
                     message: `L'emprunt du livre "${loan.book_title}" par ${loan.first_name} ${loan.last_name} a été validé.`,
+                    priority: 'normal',
                     related_entity_type: 'loan',
                     related_entity_id: loanId
                 });
@@ -183,7 +185,18 @@ class LoanService {
             // Récupérer l'emprunt créé avec les détails du livre
             const [createdLoanRows] = await connection.execute(`
                 SELECT 
-                    l.*,
+                    l.id,
+                    l.user_id,
+                    l.book_id,
+                    l.loan_date,
+                    l.due_date,
+                    l.return_date,
+                    l.extension_count,
+                    l.status,
+                    l.notes,
+                    l.fine_amount,
+                    l.created_at,
+                    l.updated_at,
                     b.title as book_title,
                     b.author as book_author,
                     u.first_name,

@@ -3,6 +3,167 @@ const { AppError, formatDate, generateId } = require('../utils/helpers');
 const EmailService = require('./email.service');
 
 class NotificationService {
+  /**
+   * Crée une notification pour une action sur un livre (ajout, suppression, mise à jour, réservation, etc.)
+   * bookData doit contenir : user_id (cible), admin_id (optionnel), type, book_title, book_id
+   */
+  static async createBookNotification(bookData) {
+    try {
+      const { user_id, admin_id, book_title, type, book_id } = bookData;
+      const notifications = [];
+
+      // Notif utilisateur (étudiant ou abonné)
+      if (user_id) {
+        let title, message, notifType = type;
+        switch (type) {
+          case 'book_available':
+            notifType = 'book_available';
+            title = 'Livre disponible';
+            message = `Le livre "${book_title}" que vous attendiez est maintenant disponible !`;
+            break;
+          case 'new_book':
+            notifType = 'new_book';
+            title = 'Nouveau livre ajouté';
+            message = `Un nouveau livre a été ajouté à la bibliothèque : "${book_title}"`;
+            break;
+          case 'book_reservation':
+            notifType = 'book_reservation';
+            title = 'Réservation confirmée';
+            message = `Votre réservation pour le livre "${book_title}" a été confirmée.`;
+            break;
+          case 'book_deleted':
+            notifType = 'book_deleted';
+            title = 'Livre supprimé';
+            message = `Le livre "${book_title}" a été supprimé du catalogue.`;
+            break;
+          default:
+            notifType = type;
+            title = 'Notification livre';
+            message = `Mise à jour concernant le livre "${book_title}".`;
+        }
+        notifications.push(this.create({
+          user_id,
+          type: notifType,
+          title,
+          message,
+          priority: type === 'book_available' ? 'high' : 'normal',
+          related_entity_type: 'book',
+          related_entity_id: book_id,
+          send_email: type === 'book_available',
+          metadata: { book_title }
+        }));
+      }
+
+      // Notif admin (pour les actions importantes)
+      let adminIds = [];
+      if (Array.isArray(admin_id)) {
+        adminIds = admin_id;
+      } else if (admin_id) {
+        adminIds = [admin_id];
+      }
+      for (const aid of adminIds) {
+        let adminTitle, adminMessage, adminType;
+        switch (type) {
+          case 'book_reservation':
+            adminType = 'book_reservation_admin';
+            adminTitle = 'Nouvelle réservation de livre';
+            adminMessage = `Un utilisateur a réservé le livre "${book_title}".`;
+            break;
+          case 'book_deleted':
+            adminType = 'book_deleted_admin';
+            adminTitle = 'Livre supprimé';
+            adminMessage = `Le livre "${book_title}" a été supprimé du catalogue.`;
+            break;
+          case 'new_book':
+            adminType = 'new_book_admin';
+            adminTitle = 'Nouveau livre ajouté';
+            adminMessage = `Un nouveau livre a été ajouté : "${book_title}".`;
+            break;
+          default:
+            adminType = 'book_admin_update';
+            adminTitle = 'Notification livre (admin)';
+            adminMessage = `Mise à jour concernant le livre "${book_title}".`;
+        }
+        notifications.push(this.create({
+          user_id: aid,
+          type: adminType,
+          title: adminTitle,
+          message: adminMessage,
+          priority: 'normal',
+          related_entity_type: 'book',
+          related_entity_id: book_id,
+          send_email: false,
+          metadata: { book_title }
+        }));
+      }
+
+      return Promise.all(notifications);
+    } catch (error) {
+      console.error('Erreur notification livre:', error);
+      throw new AppError('Erreur lors de la création de la notification de livre', 500);
+    }
+  }
+
+  /**
+   * Crée une notification système (ex: maintenance, bienvenue, changement de mot de passe, etc.)
+   * userData doit contenir : user_id, type, customTitle, customMessage
+   */
+  static async createSystemNotification(userData) {
+    try {
+      const { user_id, type, customTitle, customMessage } = userData;
+      let title, message, notifType = type, priority = 'normal';
+      switch (type) {
+        case 'welcome':
+          notifType = 'welcome';
+          title = 'Bienvenue sur YORI';
+          message = 'Bonjour et bienvenue sur la plateforme YORI ! Vous pouvez maintenant explorer notre catalogue et emprunter des livres.';
+          break;
+        case 'password_changed':
+          notifType = 'password_changed';
+          title = 'Mot de passe modifié';
+          message = 'Votre mot de passe a été modifié avec succès.';
+          break;
+        case 'email_verified':
+          notifType = 'email_verified';
+          title = 'Email vérifié';
+          message = 'Votre adresse email a été vérifiée avec succès.';
+          break;
+        case 'profile_updated':
+          notifType = 'profile_updated';
+          title = 'Profil mis à jour';
+          message = 'Vos informations de profil ont été mises à jour.';
+          break;
+        case 'maintenance':
+          notifType = 'maintenance';
+          title = 'Maintenance programmée';
+          message = 'Une maintenance du système YORI est prévue. Vous serez notifié des détails.';
+          priority = 'high';
+          break;
+        case 'custom':
+          notifType = 'custom';
+          title = customTitle || 'Notification';
+          message = customMessage || 'Vous avez une nouvelle notification.';
+          break;
+        default:
+          notifType = 'system_update';
+          title = 'Notification système YORI';
+          message = 'Vous avez une nouvelle notification système YORI.';
+      }
+
+      return await this.create({
+        user_id,
+        type: notifType,
+        title,
+        message,
+        priority,
+        send_email: false,
+        metadata: { notification_type: type }
+      });
+    } catch (error) {
+      console.error('Erreur notification système:', error);
+      throw new AppError('Erreur lors de la création de la notification système', 500);
+    }
+  }
   // Créer une notification
   static async create(notificationData) {
     try {
@@ -58,9 +219,7 @@ class NotificationService {
       // Vérifier d'abord si la table existe
       const checkTableQuery = "SHOW TABLES LIKE 'notifications'";
       const tableExists = await db.query(checkTableQuery);
-      
       if (!tableExists || tableExists.length === 0) {
-        // Table n'existe pas, retourner un résultat vide
         return {
           notifications: [],
           total: 0,
@@ -68,18 +227,46 @@ class NotificationService {
         };
       }
 
-      // Table existe, faire la vraie requête
-      const query = 'SELECT * FROM notifications WHERE user_id = ? ORDER BY created_at DESC LIMIT 10';
-      const result = await db.query(query, [userId]);
+      // Gestion des options de pagination et de filtrage
+      const {
+        limit = 20,
+        offset = 0,
+        unread_only = false,
+        type = '',
+        priority = ''
+      } = options;
+
+      let where = 'WHERE user_id = ?';
+      const params = [userId];
+      if (unread_only) {
+        where += ' AND is_read = false';
+      }
+      if (type && type !== '') {
+        where += ' AND type = ?';
+        params.push(type);
+      }
+      if (priority && priority !== '') {
+        where += ' AND priority = ?';
+        params.push(priority);
+      }
+
+      // Récupérer le total pour la pagination
+      const countQuery = `SELECT COUNT(*) as total FROM notifications ${where}`;
+      const countResult = await db.query(countQuery, params);
+      const total = parseInt(countResult[0]?.total || 0);
+
+      // Récupérer les notifications paginées
+      const query = `SELECT * FROM notifications ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+      const notifParams = [...params, parseInt(limit), parseInt(offset)];
+      const result = await db.query(query, notifParams);
 
       return {
         notifications: result,
-        total: result.length,
-        hasMore: false
+        total,
+        hasMore: offset + result.length < total
       };
     } catch (error) {
       console.error('Erreur récupération notifications:', error.message);
-      // Si table n'existe pas, retourner un résultat vide plutôt qu'une erreur
       return {
         notifications: [],
         total: 0,
@@ -174,45 +361,146 @@ class NotificationService {
   }
 
   // Créer une notification d'emprunt
+  /**
+   * Crée une notification d'emprunt pour l'étudiant et/ou l'admin selon la transition métier.
+   * loanData doit contenir : user_id (étudiant), admin_id (optionnel), type, book_title, loan_id, loan_date, due_date
+   */
   static async createLoanNotification(loanData) {
     try {
-      const { user_id, book_title, loan_date, due_date, type } = loanData;
+      const { user_id, admin_id, book_title, loan_date, due_date, type, loan_id } = loanData;
+      const notifications = [];
 
-      let title, message;
-      
-      switch (type) {
-        case 'loan_created':
-          title = 'Nouvel emprunt confirmé';
-          message = `Votre emprunt du livre "${book_title}" a été confirmé. Date de retour prévue : ${formatDate(due_date)}`;
-          break;
-        case 'loan_reminder':
-          title = 'Rappel de retour';
-          message = `N'oubliez pas de rendre le livre "${book_title}" avant le ${formatDate(due_date)}`;
-          break;
-        case 'loan_overdue':
-          title = 'Retard de retour';
-          message = `Le livre "${book_title}" devait être rendu le ${formatDate(due_date)}. Merci de le rendre rapidement.`;
-          break;
-        case 'loan_returned':
-          title = 'Retour confirmé';
-          message = `Le retour du livre "${book_title}" a été confirmé. Merci !`;
-          break;
-        default:
-          title = 'Notification d\'emprunt';
-          message = `Mise à jour concernant votre emprunt du livre "${book_title}"`;
+      // Notif étudiant (toutes transitions)
+      if (user_id) {
+        let title, message, notifType = type;
+        switch (type) {
+          case 'loan_created':
+            notifType = 'loan_created';
+            title = 'Nouvel emprunt confirmé';
+            message = `Votre emprunt du livre "${book_title}" a été confirmé. Date de retour prévue : ${formatDate(due_date)}`;
+            break;
+          case 'loan_requested':
+            notifType = 'loan_requested';
+            title = 'Demande d\'emprunt envoyée';
+            message = `Votre demande d'emprunt pour le livre "${book_title}" a bien été envoyée à l'administration.`;
+            break;
+          case 'loan_validated':
+            notifType = 'loan_validated';
+            title = 'Emprunt validé';
+            message = `Votre emprunt du livre "${book_title}" a été validé. Vous pouvez venir le récupérer.`;
+            break;
+          case 'loan_refused':
+            notifType = 'loan_refused';
+            title = 'Emprunt refusé';
+            message = `Votre demande d'emprunt pour le livre "${book_title}" a été refusée.`;
+            break;
+          case 'loan_reminder':
+            notifType = 'loan_reminder';
+            title = 'Rappel de retour';
+            message = `N'oubliez pas de rendre le livre "${book_title}" avant le ${formatDate(due_date)}`;
+            break;
+          case 'loan_overdue':
+            notifType = 'loan_overdue';
+            title = 'Retard de retour';
+            message = `Le livre "${book_title}" devait être rendu le ${formatDate(due_date)}. Merci de le rendre rapidement.`;
+            break;
+          case 'loan_returned':
+            notifType = 'loan_returned';
+            title = 'Retour confirmé';
+            message = `Le retour du livre "${book_title}" a été confirmé. Merci !`;
+            break;
+          case 'loan_renewed':
+            notifType = 'loan_renewed';
+            title = 'Renouvellement accepté';
+            message = `Votre emprunt du livre "${book_title}" a été renouvelé. Nouvelle date de retour : ${formatDate(due_date)}`;
+            break;
+          case 'loan_renewal_requested':
+            notifType = 'loan_renewal_requested';
+            title = 'Demande de renouvellement envoyée';
+            message = `Votre demande de renouvellement pour le livre "${book_title}" a bien été envoyée à l'administration.`;
+            break;
+          default:
+            notifType = type;
+            title = 'Notification d\'emprunt';
+            message = `Mise à jour concernant votre emprunt du livre "${book_title}"`;
+        }
+        notifications.push(this.create({
+          user_id,
+          type: notifType,
+          title,
+          message,
+          priority: ['loan_overdue'].includes(type) ? 'high' : 'normal',
+          related_entity_type: 'loan',
+          related_entity_id: loan_id,
+          send_email: ['loan_overdue'].includes(type),
+          metadata: { book_title, due_date }
+        }));
       }
 
-      return await this.create({
-        user_id,
-        type: 'loan',
-        title,
-        message,
-        priority: type === 'loan_overdue' ? 'high' : 'normal',
-        related_entity_type: 'loan',
-        related_entity_id: loanData.loan_id,
-        send_email: type === 'loan_overdue',
-        metadata: { book_title, due_date }
-      });
+      // Notif admin (toutes transitions métier utiles)
+      let adminIds = [];
+      if (Array.isArray(admin_id)) {
+        adminIds = admin_id;
+      } else if (admin_id) {
+        adminIds = [admin_id];
+      }
+      for (const aid of adminIds) {
+        let adminTitle, adminMessage, adminType;
+        switch (type) {
+          case 'loan_requested':
+            adminType = 'loan_requested';
+            adminTitle = 'Nouvelle demande d\'emprunt';
+            adminMessage = `Un étudiant a demandé l'emprunt du livre "${book_title}".`;
+            break;
+          case 'loan_validated':
+            adminType = 'loan_validated_admin';
+            adminTitle = 'Emprunt validé';
+            adminMessage = `Un emprunt du livre "${book_title}" a été validé.`;
+            break;
+          case 'loan_refused':
+            adminType = 'loan_refused_admin';
+            adminTitle = 'Emprunt refusé';
+            adminMessage = `Une demande d'emprunt pour le livre "${book_title}" a été refusée.`;
+            break;
+          case 'loan_returned':
+            adminType = 'loan_returned_admin';
+            adminTitle = 'Livre retourné';
+            adminMessage = `Le livre "${book_title}" a été rendu par l'étudiant.`;
+            break;
+          case 'loan_renewal_requested':
+            adminType = 'loan_renewal_requested';
+            adminTitle = 'Demande de renouvellement';
+            adminMessage = `Un étudiant a demandé le renouvellement de l'emprunt du livre "${book_title}".`;
+            break;
+          case 'loan_renewed':
+            adminType = 'loan_renewed_admin';
+            adminTitle = 'Renouvellement accepté';
+            adminMessage = `Un emprunt du livre "${book_title}" a été renouvelé.`;
+            break;
+          case 'loan_overdue':
+            adminType = 'loan_overdue_admin';
+            adminTitle = 'Emprunt en retard';
+            adminMessage = `Un emprunt du livre "${book_title}" est en retard.`;
+            break;
+          default:
+            adminType = 'loan_admin_update';
+            adminTitle = 'Notification d\'emprunt (admin)';
+            adminMessage = `Mise à jour concernant un emprunt du livre "${book_title}".`;
+        }
+        notifications.push(this.create({
+          user_id: aid,
+          type: adminType,
+          title: adminTitle,
+          message: adminMessage,
+          priority: ['loan_overdue'].includes(type) ? 'high' : 'normal',
+          related_entity_type: 'loan',
+          related_entity_id: loan_id,
+          send_email: false,
+          metadata: { book_title, due_date }
+        }));
+      }
+
+      return Promise.all(notifications);
     } catch (error) {
       console.error('Erreur notification emprunt:', error);
       throw new AppError('Erreur lors de la création de la notification d\'emprunt', 500);
@@ -222,10 +510,9 @@ class NotificationService {
   // Créer une notification de livre
   static async createBookNotification(bookData) {
     try {
-      const { user_id, book_title, type } = bookData;
+      const { user_id, book_title, type, book_id } = bookData;
 
-      let title, message;
-      
+      let title, message, notifType = type;
       switch (type) {
         case 'book_available':
           title = 'Livre disponible';
@@ -240,18 +527,19 @@ class NotificationService {
           message = `Votre réservation pour le livre "${book_title}" a été confirmée`;
           break;
         default:
+          notifType = 'book_update';
           title = 'Notification de livre';
           message = `Mise à jour concernant le livre "${book_title}"`;
       }
 
       return await this.create({
         user_id,
-        type: 'book',
+        type: notifType, // type explicite (ex: book_available, new_book...)
         title,
         message,
         priority: type === 'book_available' ? 'high' : 'normal',
         related_entity_type: 'book',
-        related_entity_id: bookData.book_id,
+        related_entity_id: book_id,
         send_email: type === 'book_available',
         metadata: { book_title }
       });
@@ -266,12 +554,11 @@ class NotificationService {
     try {
       const { user_id, type, customTitle, customMessage } = userData;
 
-      let title, message, priority = 'normal';
-      
+      let title, message, notifType = type, priority = 'normal';
       switch (type) {
         case 'welcome':
-          title = 'Bienvenue dans YORI !';
-          message = 'Votre compte a été créé avec succès. Commencez à explorer notre catalogue de livres.';
+          title = 'Bienvenue sur YORI';
+          message = 'Bonjour et bienvenue sur la plateforme YORI ! Vous pouvez maintenant explorer notre catalogue et emprunter des livres.';
           break;
         case 'password_changed':
           title = 'Mot de passe modifié';
@@ -287,7 +574,7 @@ class NotificationService {
           break;
         case 'maintenance':
           title = 'Maintenance programmée';
-          message = 'Une maintenance du système est prévue. Vous serez notifié des détails.';
+          message = 'Une maintenance du système YORI est prévue. Vous serez notifié des détails.';
           priority = 'high';
           break;
         case 'custom':
@@ -295,13 +582,14 @@ class NotificationService {
           message = customMessage || 'Vous avez une nouvelle notification.';
           break;
         default:
-          title = 'Notification système';
-          message = 'Vous avez une nouvelle notification système.';
+          notifType = 'system_update';
+          title = 'Notification système YORI';
+          message = 'Vous avez une nouvelle notification système YORI.';
       }
 
       return await this.create({
         user_id,
-        type: 'system',
+        type: notifType, // type explicite (ex: welcome, maintenance...)
         title,
         message,
         priority,
